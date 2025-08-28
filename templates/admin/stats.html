@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}SWA V2 - Statistics{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="admin-header">
+        <h1>System Statistics</h1>
+        <p class="admin-subtitle">Detailed analytics and usage statistics</p>
+    </div>
+    
+    <div class="admin-actions">
+        <a href="/admin" class="action-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </div>
+    
+    <div class="stats-overview">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.total_users }}</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.daily_users }}</h3>
+                        <p>Daily Active Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.online_users }}</h3>
+                        <p>Online Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.last_reset }}</h3>
+                        <p>Last Reset</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-card chart-card">
+        <h2 class="section-title">Weekly Game Activity</h2>
+        <div class="chart-container">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="content-card chart-card">
+        <h2 class="section-title">Monthly Game Activity</h2>
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-section {
+        max-width: 1200px;
+        margin: 30px auto 50px;
+    }
+    
+    .admin-header {
+        margin-bottom: 30px;
+    }
+    
+    .admin-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: white;
+        background: linear-gradient(90deg, #0066ff, #00a3ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .admin-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .admin-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: rgba(35, 35, 45, 0.7);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        background: rgba(45, 45, 55, 0.7);
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stats-overview {
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: rgba(25, 25, 35, 0.8);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(0, 102, 255, 0.2);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, rgba(0, 102, 255, 0.2), rgba(0, 163, 255, 0.2));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        box-shadow: 0 8px 20px rgba(0, 102, 255, 0.1);
+        flex-shrink: 0;
+    }
+    
+    .stat-icon i {
+        font-size: 24px;
+        background: linear-gradient(135deg, #0066ff, #00a3ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-content h3 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: white;
+    }
+    
+    .stat-content p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    .chart-card {
+        background: rgba(25, 25, 35, 0.8);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(0, 102, 255, 0.2);
+    }
+    
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: white;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 10px;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, #0066ff, #00a3ff);
+        border-radius: 3px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    @media (max-width: 768px) {
+        .admin-header h1 {
+            font-size: 26px;
+        }
+        
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .stat-content h3 {
+            font-size: 24px;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .stat-icon i {
+            font-size: 20px;
+        }
+        
+        .chart-container {
+            height: 250px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Weekly Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    const weeklyLabels = {{ week_data.labels|safe }};
+    const weeklyValues = {{ week_data.values|safe }};
+    
+    const weeklyChart = new Chart(weeklyCtx, {
+        type: 'line',
+        data: {
+            labels: weeklyLabels,
+            datasets: [{
+                label: 'Game Sessions',
+                data: weeklyValues,
+                backgroundColor: 'rgba(0, 102, 255, 0.2)',
+                borderColor: '#0066ff',
+                borderWidth: 2,
+                pointBackgroundColor: '#0066ff',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#0066ff',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(25, 25, 35, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+    
+    // Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyLabels = {{ month_data.labels|safe }};
+    const monthlyValues = {{ month_data.values|safe }};
+    
+    const monthlyChart = new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: 'Game Sessions',
+                data: monthlyValues,
+                backgroundColor: 'rgba(0, 163, 255, 0.6)',
+                borderColor: '#00a3ff',
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: 'rgba(0, 163, 255, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(25, 25, 35, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

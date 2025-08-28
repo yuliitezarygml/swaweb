@@ -1,0 +1,464 @@
+{
+  "success": true,
+  "data": {
+    "10": {
+      "id": "10",
+      "name": "Counter-Strike",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/10/capsule_231x87.jpg?t=1729702322",
+      "release_date": "1 Nov, 2000",
+      "developers": [
+        "Valve"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": true,
+        "linux": true
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 49,
+          "description": "PvP"
+        },
+        {
+          "id": 36,
+          "description": "Online PvP"
+        },
+        {
+          "id": 37,
+          "description": "Shared/Split Screen PvP"
+        },
+        {
+          "id": 8,
+          "description": "Valve Anti-Cheat enabled"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        }
+      ],
+      "recommendations": {
+        "total": 155801
+      },
+      "metacritic": {
+        "score": 88,
+        "url": "https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f"
+      },
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": false,
+      "required_age": 0,
+      "type": "game",
+      "price_overview": {
+        "currency": "EUR",
+        "initial": 819,
+        "final": 819,
+        "discount_percent": 0,
+        "initial_formatted": "",
+        "final_formatted": "8,19€"
+      },
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "free"
+    },
+    "50": {
+      "id": "50",
+      "name": "Half-Life: Opposing Force",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/50/capsule_231x87.jpg?t=1729702282",
+      "release_date": "1 Nov, 1999",
+      "developers": [
+        "Gearbox Software"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": true,
+        "linux": true
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 8,
+          "description": "Valve Anti-Cheat enabled"
+        },
+        {
+          "id": 44,
+          "description": "Remote Play Together"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        }
+      ],
+      "recommendations": {
+        "total": 21098
+      },
+      "metacritic": {},
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": false,
+      "required_age": 0,
+      "type": "game",
+      "price_overview": {
+        "currency": "EUR",
+        "initial": 499,
+        "final": 124,
+        "discount_percent": 75,
+        "initial_formatted": "4,99€",
+        "final_formatted": "1,24€"
+      },
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "free"
+    },
+    "70": {
+      "id": "70",
+      "name": "Half-Life",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/70/capsule_231x87.jpg?t=1729702293",
+      "release_date": "19 Nov, 1998",
+      "developers": [
+        "Valve"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": true,
+        "linux": true
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 8,
+          "description": "Valve Anti-Cheat enabled"
+        },
+        {
+          "id": 44,
+          "description": "Remote Play Together"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        }
+      ],
+      "recommendations": {
+        "total": 32560
+      },
+      "metacritic": {
+        "score": 96,
+        "url": "https://www.metacritic.com/game/pc/half-life?ftag=MCD-06-10aaa1f"
+      },
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": false,
+      "required_age": 0,
+      "type": "game",
+      "price_overview": {
+        "currency": "EUR",
+        "initial": 819,
+        "final": 204,
+        "discount_percent": 75,
+        "initial_formatted": "8,19€",
+        "final_formatted": "2,04€"
+      },
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "free"
+    },
+    "220": {
+      "id": "220",
+      "name": "Half-Life 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/220/capsule_231x87.jpg?t=1729702218",
+      "release_date": "16 Nov, 2004",
+      "developers": [
+        "Valve"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": true,
+        "linux": true
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 22,
+          "description": "Steam Achievements"
+        },
+        {
+          "id": 29,
+          "description": "Steam Trading Cards"
+        },
+        {
+          "id": 13,
+          "description": "Captions available"
+        },
+        {
+          "id": 17,
+          "description": "Partial Controller Support"
+        },
+        {
+          "id": 18,
+          "description": "Partial VR Support"
+        },
+        {
+          "id": 23,
+          "description": "Steam Cloud"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        }
+      ],
+      "recommendations": {
+        "total": 101371
+      },
+      "metacritic": {
+        "score": 96,
+        "url": "https://www.metacritic.com/game/pc/half-life-2?ftag=MCD-06-10aaa1f"
+      },
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": false,
+      "required_age": 0,
+      "type": "game",
+      "price_overview": {
+        "currency": "EUR",
+        "initial": 819,
+        "final": 204,
+        "discount_percent": 75,
+        "initial_formatted": "8,19€",
+        "final_formatted": "2,04€"
+      },
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "free"
+    },
+    "730": {
+      "id": "730",
+      "name": "Counter-Strike 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/capsule_231x87.jpg?t=1731936629",
+      "release_date": "21 Aug, 2012",
+      "developers": [
+        "Valve"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": false,
+        "linux": false
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 22,
+          "description": "Steam Achievements"
+        },
+        {
+          "id": 29,
+          "description": "Steam Trading Cards"
+        },
+        {
+          "id": 30,
+          "description": "Steam Workshop"
+        },
+        {
+          "id": 35,
+          "description": "In-App Purchases"
+        },
+        {
+          "id": 8,
+          "description": "Valve Anti-Cheat enabled"
+        },
+        {
+          "id": 15,
+          "description": "Stats"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "2",
+          "description": "FPS"
+        }
+      ],
+      "recommendations": {
+        "total": 6458123
+      },
+      "metacritic": {
+        "score": 81,
+        "url": "https://www.metacritic.com/game/pc/counter-strike-global-offensive?ftag=MCD-06-10aaa1f"
+      },
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": true,
+      "required_age": 0,
+      "type": "game",
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "premium"
+    },
+    "570": {
+      "id": "570",
+      "name": "Dota 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/570/capsule_231x87.jpg?t=1716947864",
+      "release_date": "9 Jul, 2013",
+      "developers": [
+        "Valve"
+      ],
+      "platforms": {
+        "windows": true,
+        "mac": true,
+        "linux": true
+      },
+      "drm_notice": "",
+      "dlc": [],
+      "ext_user_account_notice": "",
+      "categories": [
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 22,
+          "description": "Steam Achievements"
+        },
+        {
+          "id": 29,
+          "description": "Steam Trading Cards"
+        },
+        {
+          "id": 30,
+          "description": "Steam Workshop"
+        },
+        {
+          "id": 35,
+          "description": "In-App Purchases"
+        },
+        {
+          "id": 36,
+          "description": "Online PvP"
+        },
+        {
+          "id": 38,
+          "description": "Online Co-op"
+        },
+        {
+          "id": 15,
+          "description": "Stats"
+        },
+        {
+          "id": 62,
+          "description": "Family Sharing"
+        }
+      ],
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "37",
+          "description": "Free to Play"
+        },
+        {
+          "id": "2",
+          "description": "Strategy"
+        },
+        {
+          "id": "3",
+          "description": "MOBA"
+        }
+      ],
+      "recommendations": {
+        "total": 1857629
+      },
+      "metacritic": {
+        "score": 90,
+        "url": "https://www.metacritic.com/game/pc/dota-2?ftag=MCD-06-10aaa1f"
+      },
+      "publishers": [
+        "Valve"
+      ],
+      "is_free": true,
+      "required_age": 0,
+      "type": "game",
+      "last_update": "2025-01-01",
+      "added_at": "2025-01-01",
+      "access": "premium"
+    }
+  }
+}

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}SWA V2 - Login{% endblock %}
+
+{% block content %}
+<div class="account-section">
+    <div class="content-card">
+        <div class="account-header">
+            <h2>Login to Your Account</h2>
+            <p class="account-subtitle">Access your personal dashboard and premium features</p>
+        </div>
+
+        {% if error %}
+        <div style="display: none;" data-flash-message="{{ error|escapejs }}" data-flash-type="error"></div>
+        {% endif %}
+
+        <form method="post" action="/login" class="account-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+            </div>
+            
+            <div class="form-footer">
+                <p>Don't have an account? <a href="/register">Register now</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-section {
+        max-width: 500px;
+        margin: 50px auto;
+    }
+    
+    .account-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .account-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, #0066ff, #00a3ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .account-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+    }
+    
+    .account-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .form-group label {
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .input-wrapper i {
+        position: absolute;
+        left: 15px;
+        color: var(--text-secondary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px 12px 45px;
+        background: rgba(30, 30, 30, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
+    }
+    
+    .form-actions {
+        margin-top: 10px;
+    }
+    
+    .btn-primary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: #0052cc;
+    }
+    
+    .form-footer {
+        margin-top: 20px;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+    
+    .form-footer a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .form-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #ff6b7d;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+</style>
+{% endblock %} 

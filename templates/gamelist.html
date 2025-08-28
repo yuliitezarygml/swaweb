@@ -1,0 +1,2341 @@
+{% extends "base.html" %}
+
+{% block title %}Game List - SWA V2{% endblock %}
+
+{% block extra_css %}
+<style>
+    .game-tabs {
+        display: flex;
+        margin: 1.5rem 0;
+        border-radius: 4px;
+        overflow: hidden;
+        background: rgba(15, 15, 15, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+    }
+    
+    .game-tab {
+        padding: 0.8rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        color: rgba(255, 255, 255, 0.6);
+        flex: 1;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }
+    
+    .game-tab.active {
+        color: #fff;
+        background: rgba(0, 102, 255, 0.2);
+    }
+    
+    .game-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #0066ff;
+    }
+    
+    .game-tab:hover:not(.active) {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .filter-section {
+        background: rgba(15, 15, 15, 0.8);
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(30, 30, 30, 0.8);
+    }
+    
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .filter-controls {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    
+    .d-flex.align-items-center.gap-3 {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem !important;
+    }
+    
+    .filter-item {
+        height: 38px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+    }
+    
+    .filter-item:last-child {
+        margin-right: 0;
+    }
+    
+    .search-input.filter-item {
+        padding: 0 0.8rem;
+        justify-content: flex-start;
+    }
+    
+    .search-input {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        color: #fff;
+        padding: 0 0.8rem;
+        width: 280px;
+        max-width: 100%;
+        transition: all 0.2s ease;
+        height: 38px;
+        line-height: 38px;
+        box-sizing: border-box;
+    }
+    
+    .search-input:focus {
+        border-color: rgba(0, 102, 255, 0.5);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
+    }
+    
+    .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .game-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .game-list .game-card {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        height: auto;
+    }
+    
+    .game-list .game-image {
+        width: 230px;
+        height: auto;
+        min-height: 130px;
+        flex-shrink: 0;
+        border-radius: 12px 0 0 12px;
+        border-bottom: none;
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    
+    .game-list .notice-tags {
+        position: static;
+        margin: 0.5rem 0 0.75rem 0;
+    }
+    
+    .game-list .game-info {
+        padding: 1rem;
+        padding-bottom: 3rem; /* More space at the bottom for icons and date */
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .game-list .game-header {
+        margin-bottom: 0.5rem;
+    }
+    
+    .game-list .game-name {
+        font-size: 1.25rem;
+        -webkit-line-clamp: 1;
+    }
+    
+    .game-list .game-id {
+        margin-bottom: 0.5rem;
+    }
+    
+    .game-list .game-genres {
+        margin-bottom: 0.5rem;
+    }
+    
+    .game-list .game-platform {
+        position: absolute;
+        bottom: 0.75rem;
+        right: 1rem;
+        border-top: none;
+        padding-top: 0;
+    }
+    
+    .game-list .meta-score {
+        margin-left: 1rem;
+    }
+    
+    .game-list .last-update {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 1rem;
+    }
+    
+    .view-toggle {
+        display: flex;
+        align-items: center;
+        background: rgba(10, 10, 10, 0.8);
+        border-radius: 4px;
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        height: 38px;
+        box-sizing: border-box;
+    }
+    
+    .view-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none;
+        background-color: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    
+    .view-btn:hover {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .view-btn.active {
+        color: #fff;
+        background: rgba(0, 102, 255, 0.2);
+    }
+    
+    .view-btn.disabled {
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    
+    .view-btn.disabled:hover {
+        color: rgba(255, 255, 255, 0.3);
+        background-color: transparent;
+    }
+    
+    .game-card {
+        background: rgba(15, 15, 15, 0.8);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        position: relative;
+        min-height: 300px;
+    }
+    
+    .game-card:hover {
+        border-color: rgba(0, 102, 255, 0.4);
+    }
+    
+    .game-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .game-info {
+        padding: 1rem;
+        padding-bottom: 3rem; /* More space at the bottom for icons and date */
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .game-name {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #ffffff;
+    }
+    
+    .meta-score {
+        background-color: #6c3;
+        color: #000;
+        font-weight: 600;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        min-width: 24px;
+        text-align: center;
+        margin-left: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    .meta-score.yellow {
+        background-color: #fc3;
+    }
+    
+    .meta-score.red {
+        background-color: #f00;
+        color: #fff;
+    }
+    
+    .game-id {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.4rem;
+        border-radius: 4px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        position: relative;
+        transition: all 0.2s ease;
+        user-select: all;
+        border: 1px solid transparent;
+    }
+    
+    .game-id::after {
+        content: 'Click to copy';
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+        z-index: 10;
+        white-space: nowrap;
+    }
+    
+    .game-id:hover {
+        color: #ffffff;
+        background: rgba(0, 102, 255, 0.1);
+        border-color: rgba(0, 102, 255, 0.3);
+    }
+    
+    .game-id:hover::after {
+        opacity: 1;
+    }
+    
+    .game-id i {
+        margin-right: 0.35rem;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .game-release {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .game-release i {
+        color: rgba(255, 255, 255, 0.5);
+        margin-right: 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .game-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .genre-tag {
+        font-size: 0.7rem;
+        background: rgba(0, 0, 0, 0.3);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+    }
+    
+    .game-platform {
+        font-size: 0.75rem;
+        position: absolute;
+        bottom: 0.75rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        border-top: none;
+        padding: 0.3rem 0;
+        background: transparent;
+        border-radius: 0;
+    }
+    
+    .platform-icon {
+        opacity: 0.5;
+        font-size: 0.85rem;
+        transition: opacity 0.2s ease;
+    }
+    
+    .platform-icon.active {
+        opacity: 1;
+        color: #0066ff;
+    }
+    
+    .notice-tags {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+    }
+    
+    .notice-tag {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        cursor: help;
+        position: relative;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    
+    .drm-tag {
+        background: #e71d36;
+        color: #ffffff;
+    }
+    
+    .launcher-tag {
+        background: #0066ff;
+        color: #ffffff;
+    }
+    
+    .notice-tag i {
+        margin-right: 0.25rem;
+        font-size: 0.7rem;
+    }
+    
+    .last-update {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        position: absolute;
+        bottom: 0.75rem;
+        left: 1rem;
+        background: transparent;
+        padding: 0.3rem 0;
+        border-radius: 0;
+    }
+    
+    .last-update i {
+        color: rgba(255, 255, 255, 0.6);
+        margin-right: 0.25rem;
+        font-size: 0.7rem;
+    }
+    
+    /* List view card variations */
+    .game-list .game-card {
+        flex-direction: row;
+        height: auto;
+    }
+    
+    .game-list .game-image {
+        width: 200px;
+        height: auto;
+        min-height: 120px;
+        flex-shrink: 0;
+        border-radius: 8px 0 0 8px;
+    }
+    
+    .game-list .game-info {
+        padding: 1rem;
+        padding-bottom: 2.5rem;
+        flex: 1;
+    }
+    
+    .game-list .game-header {
+        margin-bottom: 0.5rem;
+    }
+    
+    .game-list .game-name {
+        font-size: 1.1rem;
+        -webkit-line-clamp: 1;
+    }
+    
+    .game-list .game-platform {
+        border-top: none;
+    }
+    
+    .game-list .last-update {
+        position: absolute;
+        bottom: 0.75rem;
+        right: 1rem;
+    }
+    
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        padding: 3rem 0;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top-color: #0066ff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .filter-btn {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        color: #fff;
+        padding: 0 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        min-width: 110px;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    
+    .filter-btn:hover {
+        border-color: rgba(0, 102, 255, 0.3);
+        background: rgba(0, 102, 255, 0.1);
+    }
+    
+    .filter-dropdown {
+        position: relative;
+    }
+    
+    .filter-dropdown.active .filter-dropdown-content {
+        display: block;
+    }
+    
+    .filter-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 99;
+    }
+    
+    .filter-dropdown.active .filter-overlay {
+        display: block;
+    }
+    
+    .filter-dropdown-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(20, 20, 20, 0.95);
+        border-radius: 8px;
+        padding: 1.8rem;
+        width: 550px;
+        max-width: 90vw;
+        max-height: 85vh;
+        z-index: 100;
+        display: none;
+        overflow-y: auto;
+        border: 1px solid rgba(50, 50, 50, 0.8);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .filter-group {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    .filter-group:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .filter-group-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid rgba(50, 50, 50, 0.8);
+    }
+    
+    .filter-group-title i {
+        margin-right: 0.6rem;
+        color: #0066ff;
+        font-size: 1.1rem;
+    }
+    
+    .filter-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(50, 50, 50, 0.8);
+    }
+    
+    .filter-btn-reset,
+    .filter-btn-apply {
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        font-size: 0.9rem;
+    }
+    
+    .filter-btn-reset {
+        background: rgba(40, 40, 40, 0.8);
+        color: #fff;
+    }
+    
+    .filter-btn-reset:hover {
+        background: rgba(60, 60, 60, 0.8);
+    }
+    
+    .filter-btn-apply {
+        background: #0066ff;
+        color: #fff;
+    }
+    
+    .filter-btn-apply:hover {
+        background: #0055d4;
+    }
+    
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 2rem;
+        background: rgba(15, 15, 15, 0.8);
+        border-radius: 4px;
+        padding: 1rem;
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        position: sticky;
+        bottom: 1rem;
+        z-index: 50;
+    }
+    
+    .page-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+    }
+    
+    .page-info i {
+        color: rgba(255, 255, 255, 0.6);
+        margin-right: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+        margin: 0;
+    }
+    
+    .page-btn {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.7);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .page-btn:hover {
+        border-color: rgba(0, 102, 255, 0.3);
+        color: #fff;
+    }
+    
+    .page-btn.active {
+        background: rgba(0, 102, 255, 0.2);
+        color: #fff;
+        border-color: rgba(0, 102, 255, 0.5);
+    }
+    
+    .page-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .items-per-page {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .items-per-page-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .items-per-page-select {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 16px 12px;
+        padding-right: 2rem;
+    }
+    
+    .items-per-page-select:hover {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    .items-per-page-select:focus {
+        outline: none;
+        border-color: rgba(0, 102, 255, 0.5);
+        box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.25);
+    }
+    
+    .items-per-page-select option {
+        background-color: #141414;
+        color: #fff;
+    }
+    
+    #settingsModal .modal-content {
+        background-color: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    #settingsModal .modal-header {
+        border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    #settingsModal .modal-footer {
+        border-top-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    #settingsModal .form-check-input {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    #settingsModal .form-check-input:checked {
+        background-color: #0066ff;
+        border-color: #0066ff;
+    }
+    
+    #settingsModal .btn-primary {
+        background: linear-gradient(90deg, #0066ff, #00a3ff);
+        border: none;
+    }
+    
+    #settingsModal .btn-secondary {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .game-count {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        padding: 0 0.8rem;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    
+    .game-count i {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(90deg, #0066ff, #00a3ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+    
+    /* Add responsive adjustments */
+    @media (max-width: 768px) {
+        .filter-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .filter-controls, 
+        .filter-header > div {
+            width: 100%;
+        }
+        
+        .search-input {
+            width: 100%;
+            flex: 1;
+        }
+        
+        .pagination-info {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .game-list .game-card {
+            flex-direction: column;
+        }
+        
+        .game-list .game-image {
+            width: 100%;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .game-platform,
+        .last-update {
+            position: static !important;
+            margin-top: 0.75rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .game-platform {
+            justify-content: flex-start;
+        }
+        
+        .game-info {
+            padding-bottom: 1rem !important;
+        }
+    }
+    
+    /* Improved tooltip styling - positioned OUTSIDE the card */
+    .notice-tag[data-notice]:hover::after {
+        content: attr(data-notice);
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 20px;
+        background-color: rgba(10, 10, 10, 0.95);
+        color: #fff;
+        padding: 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        z-index: 9999;
+        border: 1px solid rgba(50, 50, 50, 0.8);
+        white-space: normal;
+        text-align: left;
+        text-transform: none;
+        font-weight: normal;
+        letter-spacing: normal;
+        min-width: 250px;
+        max-width: 350px;
+        pointer-events: none;
+    }
+    
+    .notice-tag[data-notice]:hover::before {
+        display: none;
+    }
+    
+    .filter-group {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(30, 30, 30, 0.8);
+        padding-bottom: 1rem;
+    }
+    
+    .filter-group:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .filter-group-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+    }
+    
+    .filter-group-title i {
+        margin-right: 0.5rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .filter-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem 1rem;
+    }
+    
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0.8rem;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        cursor: pointer;
+    }
+    
+    .filter-checkbox:hover {
+        background-color: rgba(0, 102, 255, 0.1);
+        border-color: rgba(0, 102, 255, 0.3);
+    }
+    
+    .filter-checkbox-left {
+        display: flex;
+        align-items: center;
+    }
+    
+    .filter-checkbox input {
+        margin: 0;
+        accent-color: #0066ff;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .filter-checkbox label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-left: 0.7rem;
+        cursor: pointer;
+        transition: color 0.2s ease;
+        color: rgba(255, 255, 255, 0.85);
+    }
+    
+    .filter-checkbox-count {
+        background-color: rgba(0, 0, 0, 0.3);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        min-width: 26px;
+        text-align: center;
+    }
+    
+    .filter-checkbox input:checked + label {
+        color: #fff;
+    }
+    
+    .filter-checkbox input:checked ~ .filter-checkbox-count {
+        background-color: rgba(0, 102, 255, 0.3);
+        color: #fff;
+    }
+    
+    .platform-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .platform-tag.active {
+        background: linear-gradient(90deg, rgba(0, 102, 255, 0.2), rgba(0, 163, 255, 0.1));
+        color: #fff;
+        border-color: rgba(0, 102, 255, 0.3);
+    }
+    
+    .platform-tag:hover {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    .platform-tag.active:hover {
+        background: linear-gradient(90deg, rgba(0, 102, 255, 0.3), rgba(0, 163, 255, 0.2));
+    }
+    
+    .platform-tag i {
+        font-size: 0.875rem;
+        color: #0066ff;
+    }
+    
+    .settings-icon {
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.3);
+        width: 38px;
+        height: 38px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-sizing: border-box;
+    }
+    
+    .settings-icon:hover {
+        border-color: rgba(30, 30, 30, 0.8);
+    }
+    
+    .selected-count {
+        background-color: #0066ff;
+        color: white;
+        font-size: 0.7rem;
+        border-radius: 10px;
+        padding: 0.1rem 0.5rem;
+        margin-left: 0.3rem;
+        display: inline-block;
+        min-width: 20px;
+        text-align: center;
+    }
+    
+    .selected-all {
+        background-color: rgba(0, 102, 255, 0.3);
+    }
+    
+    /* Add a style for the LAUNCHER button/tag that appears in the image */
+    .launcher-button, .drm-button {
+        position: absolute;
+        top: 10px;
+        z-index: 5;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 5px 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        cursor: default;
+    }
+    
+    .launcher-button {
+        left: 10px;
+        background: #0066ff;
+    }
+    
+    .drm-button {
+        right: 10px;
+        background: #e71d36;
+    }
+    
+    /* Skeleton loading animation */
+    @keyframes skeletonShimmer {
+        0% {
+            background-position: -200% 0;
+        }
+        100% {
+            background-position: 200% 0;
+        }
+    }
+    
+    .skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .skeleton-card {
+        background: rgba(15, 15, 15, 0.8);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 300px;
+    }
+    
+    .skeleton-image {
+        width: 100%;
+        height: 120px;
+        background: linear-gradient(90deg, 
+            rgba(40, 40, 40, 0.5) 0%, 
+            rgba(50, 50, 50, 0.5) 50%, 
+            rgba(40, 40, 40, 0.5) 100%);
+        background-size: 200% 100%;
+        animation: skeletonShimmer 1.5s infinite;
+    }
+    
+    .skeleton-content {
+        padding: 1rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding-bottom: 3rem;
+    }
+    
+    .skeleton-element {
+        background: linear-gradient(90deg, 
+            rgba(40, 40, 40, 0.5) 0%, 
+            rgba(50, 50, 50, 0.5) 50%, 
+            rgba(40, 40, 40, 0.5) 100%);
+        background-size: 200% 100%;
+        animation: skeletonShimmer 1.5s infinite;
+        border-radius: 4px;
+    }
+    
+    .skeleton-title {
+        height: 22px;
+        margin-bottom: 1rem;
+        width: 80%;
+    }
+    
+    .skeleton-id {
+        height: 16px;
+        margin-bottom: 0.75rem;
+        width: 60%;
+    }
+    
+    .skeleton-date {
+        height: 16px;
+        margin-bottom: 0.75rem;
+        width: 40%;
+    }
+    
+    .skeleton-genres {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .skeleton-genre {
+        height: 16px;
+        width: 50px;
+    }
+    
+    .skeleton-platforms {
+        position: absolute;
+        bottom: 0.75rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .skeleton-platform {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+    }
+    
+    .skeleton-update {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 1rem;
+        height: 16px;
+        width: 100px;
+    }
+    
+    /* Removed as replaced with .filter-item */
+    /* .filter-section .search-input,
+    .filter-section .filter-btn,
+    .filter-section .game-count,
+    .filter-section .settings-icon,
+    .filter-section .view-toggle,
+    .filter-section .view-btn {
+        height: 38px;
+        box-sizing: border-box;
+    }
+    
+    .filter-section .search-input {
+        padding: 0 0.8rem;
+        line-height: 38px;
+    }
+    
+    .filter-section .game-count {
+        padding: 0 0.8rem;
+        display: flex;
+        align-items: center;
+    } */
+    
+    .game-count.filter-item {
+        padding: 0 0.8rem;
+        justify-content: flex-start;
+    }
+    
+    .premium-games-notice {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-left: 8px;
+        display: inline-flex;
+        align-items: center;
+        background: rgba(0, 102, 255, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 102, 255, 0.2);
+    }
+    
+    @media (max-width: 991px) {
+        .premium-games-notice {
+            display: block;
+            margin: 4px 0 0 0;
+            text-align: center;
+        }
+    }
+    
+    .premium-notice {
+        background: linear-gradient(135deg, rgba(0, 102, 255, 0.15), rgba(0, 163, 255, 0.1));
+        border: 1px solid rgba(0, 102, 255, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: #fff;
+        text-align: center;
+        animation: fadeSlideDown 0.3s ease forwards;
+    }
+    
+    .premium-notice i {
+        color: var(--primary);
+        font-size: 1.2rem;
+    }
+    
+    @keyframes fadeSlideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-notice" id="premiumNotice">
+    <i class="fas fa-crown"></i>
+    <span>Note: This list shows only a portion of our premium collection. Total premium games available: 61,549</span>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="game-tabs">
+            <div class="game-tab active" data-access="free">FREE</div>
+            <div class="game-tab" data-access="premium">PREMIUM</div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-header">
+                <div class="filter-controls">
+                    <input type="text" class="search-input filter-item" placeholder="Search games...">
+                    
+                    <div class="filter-dropdown">
+                        <button class="filter-btn filter-item">
+                            <i class="fas fa-filter"></i>
+                            Genres <span id="selectedGenresCount" class="selected-count"></span>
+                        </button>
+                        <div class="filter-overlay"></div>
+                        <div class="filter-dropdown-content" id="allFilters">
+                            <div class="filter-group">
+                                <div class="filter-group-title">
+                                    <i class="fas fa-gamepad"></i>
+                                    Genre Selection <span style="font-size: 0.8rem; opacity: 0.7; margin-left: 0.5rem;">showing counts</span>
+                                </div>
+                                <div class="filter-options" id="genreFilters">
+                                    <!-- Genres will be loaded dynamically -->
+                                    <div class="loading-spinner">
+                                        <div class="spinner"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="filter-actions">
+                                <button class="filter-btn-reset" id="resetFilters">Reset All</button>
+                                <button class="filter-btn-apply" id="applyFilters">Apply Filters</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center;">
+                    <div class="game-count filter-item">
+                        <i class="fas fa-gamepad"></i>
+                        <span id="totalGamesCount">0 games</span>
+                        <span id="premiumGamesNotice" class="premium-games-notice" style="display: none;">
+                            <i class="fas fa-crown" style="color: var(--primary); margin: 0 4px;"></i>
+                            Total: 61,549
+                        </span>
+                    </div>
+                    <button class="settings-icon filter-item" title="Settings (coming soon)">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <div class="view-toggle filter-item">
+                        <button class="view-btn active" id="gridViewBtn" title="Grid view">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn disabled" id="listViewBtn" title="List view (coming soon)">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="gamesContainer">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+<div class="pagination-info">
+    <div class="page-info">
+        <i class="fas fa-file-alt"></i>
+        <span id="pageInfo">Page 1 of 1</span>
+    </div>
+    
+    <div class="pagination" id="pagination">
+        <!-- Pagination will be generated dynamically -->
+    </div>
+    
+    <div class="items-per-page">
+        <span class="items-per-page-label">Per page:</span>
+        <select class="items-per-page-select" id="itemsPerPageSelect">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="250">250</option>
+        </select>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">Display Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="displayImages" checked>
+                        <label class="form-check-label" for="displayImages">Display Game Images</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="displayMetacriticScore" checked>
+                        <label class="form-check-label" for="displayMetacriticScore">Display Metacritic Score</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="displayLastUpdate" checked>
+                        <label class="form-check-label" for="displayLastUpdate">Display Last Update Date</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Game data cache
+        const gameDataCache = {
+            free: null,
+            premium: null,
+            lastUpdated: {
+                free: null,
+                premium: null
+            }
+        };
+        
+        // Current state
+        let currentAccess = 'free';
+        let currentPage = 1;
+        let itemsPerPage = 50;
+        let filteredGames = [];
+        let allGames = [];
+        let allGenres = new Set();
+        let viewMode = 'grid'; // Default view mode
+        
+        // Popular English genres to include
+        const popularGenres = [
+            'Action', 
+            'Adventure', 
+            'Casual', 
+            'Indie', 
+            'Racing', 
+            'RPG', 
+            'Simulation', 
+            'Sports', 
+            'Strategy', 
+            'Massively Multiplayer',
+            'FPS',
+            'Puzzle',
+            'Horror',
+            'Platformer',
+            'Shooter',
+            'Fighting'
+        ];
+        
+        // User settings with default values
+        let userSettings = {
+            displayImages: true,
+            displayMetacriticScore: true,
+            displayLastUpdate: true,
+            viewMode: 'grid'
+        };
+        
+        // Load user settings from localStorage
+        function loadUserSettings() {
+            const savedSettings = localStorage.getItem('gameListSettings');
+            if (savedSettings) {
+                userSettings = JSON.parse(savedSettings);
+                
+                // Apply saved settings to the form
+                document.getElementById('displayImages').checked = userSettings.displayImages;
+                document.getElementById('displayMetacriticScore').checked = userSettings.displayMetacriticScore;
+                document.getElementById('displayLastUpdate').checked = userSettings.displayLastUpdate;
+                
+                // Apply saved view mode
+                viewMode = userSettings.viewMode || 'grid';
+                updateViewButtons();
+            }
+            
+            // Load items per page from localStorage
+            const savedItemsPerPage = localStorage.getItem('gameListItemsPerPage');
+            if (savedItemsPerPage) {
+                itemsPerPage = parseInt(savedItemsPerPage);
+                document.getElementById('itemsPerPageSelect').value = itemsPerPage;
+            }
+        }
+        
+        // Update view mode buttons
+        function updateViewButtons() {
+            document.getElementById('gridViewBtn').classList.toggle('active', viewMode === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', viewMode === 'list');
+        }
+        
+        // Save user settings to localStorage
+        function saveUserSettings() {
+            userSettings.viewMode = viewMode;
+            localStorage.setItem('gameListSettings', JSON.stringify(userSettings));
+        }
+        
+        // Load games based on access type (free/premium)
+        async function loadGames(access = 'free', forceRefresh = false) {
+            // Show skeleton loading state
+            showSkeletonLoading();
+            
+            // Set current access
+            currentAccess = access;
+            
+            // Update active tab
+            document.querySelectorAll('.game-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.access === access);
+            });
+            
+            try {
+                // Check if we have cached data and it's not older than 1 hour
+                const now = new Date().getTime();
+                const cacheAge = gameDataCache.lastUpdated[access] ? now - gameDataCache.lastUpdated[access] : null;
+                
+                if (!gameDataCache[access] || cacheAge > 3600000 || forceRefresh) {
+                    console.log("Fetching fresh game data from API...");
+                    
+                    // Fetch fresh data from the new API endpoint - use a relative URL to avoid CORS issues
+                    const apiUrl = '/api/games/' + access;
+                    console.log("API URL:", apiUrl);
+                    
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
+                            },
+                            cache: 'no-cache'
+                        });
+                        
+                        console.log("API Response Status:", response.status);
+                        
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch game data: ${response.status} ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log("API Data received, games count:", Object.keys(data).length);
+                        
+                        // Filter games based on access type (1 = free, 2 = premium)
+                        const accessValue = access === 'free' ? '1' : '2';
+                        const filteredData = {};
+                        
+                        Object.entries(data).forEach(([gameId, gameData]) => {
+                            if (gameData.access === accessValue) {
+                                filteredData[gameId] = gameData;
+                            }
+                        });
+                        
+                        console.log(`Filtered ${access} games:`, Object.keys(filteredData).length);
+                        
+                        gameDataCache[access] = filteredData;
+                        gameDataCache.lastUpdated[access] = now;
+                    } catch (fetchError) {
+                        console.error("API fetch error:", fetchError);
+                        
+                        // Use sample data as fallback
+                        console.log("Using fallback sample data");
+                        
+                        // Create some sample game data
+                        const sampleData = {};
+                        
+                        // Add 10 sample games
+                        for (let i = 1; i <= 10; i++) {
+                            const gameId = `sample-${i}`;
+                            sampleData[gameId] = {
+                                id: gameId,
+                                name: `Sample Game ${i}`,
+                                image: '',
+                                access: access === 'free' ? '1' : '2',
+                                release_date: '2023-01-01',
+                                last_update: '2023-01-01',
+                                genres: [
+                                    { id: '1', description: 'Action' },
+                                    { id: '2', description: 'Adventure' }
+                                ],
+                                platforms: {
+                                    windows: true,
+                                    mac: false,
+                                    linux: false
+                                }
+                            };
+                        }
+                        
+                        gameDataCache[access] = sampleData;
+                        gameDataCache.lastUpdated[access] = now;
+                    }
+                }
+                
+                // Process games into array format
+                allGames = [];
+                allGenres.clear();
+                
+                for (const [gameId, gameData] of Object.entries(gameDataCache[access])) {
+                    allGames.push(gameData);
+                    
+                    // Collect all unique genres
+                    if (gameData.genres && Array.isArray(gameData.genres)) {
+                        gameData.genres.forEach(genre => {
+                            allGenres.add(genre.description);
+                        });
+                    }
+                }
+                
+                console.log(`Processing ${allGames.length} ${access} games`);
+                
+                // Sort games by last_update date (most recent first)
+                allGames.sort((a, b) => {
+                    // Handle cases where last_update might be missing
+                    if (!a.last_update) return 1;
+                    if (!b.last_update) return -1;
+                    
+                    // Convert dates for comparison (newer dates first)
+                    const dateA = new Date(a.last_update);
+                    const dateB = new Date(b.last_update);
+                    
+                    // Check if dates are valid
+                    if (isNaN(dateA.getTime())) return 1;
+                    if (isNaN(dateB.getTime())) return -1;
+                    
+                    return dateB - dateA; // Sort descending (newest first)
+                });
+                
+                // Update total games count with sort indicator
+                document.getElementById('totalGamesCount').innerHTML = `${allGames.length.toLocaleString()} games <span style="opacity: 0.6; font-size: 0.75rem; margin-left: 0.5rem;">(sorted by id)</span>`;
+                
+                // Show/hide premium games notice
+                const premiumGamesNotice = document.getElementById('premiumGamesNotice');
+                if (currentAccess === 'premium') {
+                    premiumGamesNotice.style.display = 'inline-flex';
+                } else {
+                    premiumGamesNotice.style.display = 'none';
+                }
+                
+                // Populate genre filters (only popular English genres)
+                const filteredGenres = Array.from(allGenres)
+                    .filter(genre => popularGenres.includes(genre))
+                    .sort();
+                
+                populateGenreFilters(filteredGenres);
+                
+                // Apply filters and render
+                applyFiltersAndRender();
+                
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesContainer').innerHTML = `
+                    <div class="alert alert-info" style="background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(10px); 
+                        border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; 
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+                        <i class="fas fa-exclamation-circle text-primary me-2"></i>
+                        Failed to load game data. Please try again later.<br>
+                        <small style="opacity: 0.7; margin-top: 0.5rem; display: block;">Error: ${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show skeleton loading animation
+        function showSkeletonLoading() {
+            const container = document.getElementById('gamesContainer');
+            let skeletonHTML = '<div class="skeleton-grid">';
+            
+            // Create 16 skeleton cards
+            for (let i = 0; i < 16; i++) {
+                // Randomly determine the number of genres (1-3)
+                const genreCount = Math.floor(Math.random() * 3) + 1;
+                let genresHTML = '';
+                
+                for (let j = 0; j < genreCount; j++) {
+                    // Random width for each genre
+                    const width = Math.floor(Math.random() * 30) + 40; // 40-70px
+                    genresHTML += `<div class="skeleton-genre skeleton-element" style="width: ${width}px"></div>`;
+                }
+                
+                skeletonHTML += `
+                    <div class="skeleton-card">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title skeleton-element" style="width: ${Math.floor(Math.random() * 20) + 70}%"></div>
+                            <div class="skeleton-id skeleton-element" style="width: ${Math.floor(Math.random() * 15) + 50}%"></div>
+                            <div class="skeleton-date skeleton-element" style="width: ${Math.floor(Math.random() * 10) + 35}%"></div>
+                            <div class="skeleton-genres">
+                                ${genresHTML}
+                            </div>
+                            <div class="skeleton-platforms">
+                                <div class="skeleton-platform skeleton-element"></div>
+                                <div class="skeleton-platform skeleton-element"></div>
+                                <div class="skeleton-platform skeleton-element"></div>
+                            </div>
+                            <div class="skeleton-update skeleton-element"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            skeletonHTML += '</div>';
+            container.innerHTML = skeletonHTML;
+        }
+        
+        // Populate genre filter checkboxes
+        function populateGenreFilters(genres) {
+            const genreFiltersContainer = document.getElementById('genreFilters');
+            if (!genreFiltersContainer) return;
+            
+            let genreHTML = '';
+            
+            // Count games per genre
+            const genreCounts = {};
+            genres.forEach(genre => {
+                genreCounts[genre] = 0;
+                
+                allGames.forEach(game => {
+                    if (game.genres && game.genres.some(g => g.description === genre)) {
+                        genreCounts[genre]++;
+                    }
+                });
+            });
+            
+            genres.forEach(genre => {
+                const count = genreCounts[genre] || 0;
+                const checkboxId = `genre-${genre.replace(/\s+/g, '-').toLowerCase()}`;
+                genreHTML += `
+                    <div class="filter-checkbox" data-checkbox-id="${checkboxId}">
+                        <div class="filter-checkbox-left">
+                            <input type="checkbox" id="${checkboxId}" class="genre-filter" data-genre="${genre}" checked>
+                            <label for="${checkboxId}">${genre}</label>
+                        </div>
+                        <div class="filter-checkbox-count">${count}</div>
+                    </div>
+                `;
+            });
+            
+            genreFiltersContainer.innerHTML = genreHTML || '<div class="text-muted">No genres found</div>';
+            
+            // Add event listeners to genre checkboxes and their containers
+            document.querySelectorAll('.filter-checkbox').forEach(checkboxContainer => {
+                checkboxContainer.addEventListener('click', (event) => {
+                    // Prevent triggering when clicking the actual checkbox (let it handle its own state)
+                    if (event.target.type !== 'checkbox') {
+                        const checkboxId = checkboxContainer.dataset.checkboxId;
+                        const checkbox = document.getElementById(checkboxId);
+                        checkbox.checked = !checkbox.checked;
+                        updateSelectedGenresCount();
+                    }
+                    event.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll('.genre-filter').forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => {
+                    updateSelectedGenresCount();
+                    // Prevent event bubbling to avoid double-triggering
+                    event.stopPropagation();
+                });
+            });
+            
+            // Initialize counter
+            updateSelectedGenresCount();
+        }
+        
+        // Update the count of selected genres
+        function updateSelectedGenresCount() {
+            const totalGenres = document.querySelectorAll('.genre-filter').length;
+            const selectedGenres = document.querySelectorAll('.genre-filter:checked').length;
+            const countElement = document.getElementById('selectedGenresCount');
+            
+            if (selectedGenres === totalGenres) {
+                countElement.textContent = 'All';
+                countElement.classList.add('selected-all');
+            } else {
+                countElement.textContent = selectedGenres;
+                countElement.classList.remove('selected-all');
+            }
+        }
+        
+        // Apply filters and render games
+        function applyFiltersAndRender() {
+            // Get active filters
+            const searchTerm = document.querySelector('.search-input').value.toLowerCase();
+            
+            const selectedGenres = Array.from(document.querySelectorAll('.genre-filter:checked'))
+                .map(checkbox => checkbox.dataset.genre);
+                
+            // Filter games
+            filteredGames = allGames.filter(game => {
+                // Search filter
+                if (searchTerm && !game.name.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+                
+                // Genre filter
+                if (selectedGenres.length > 0 && game.genres && game.genres.length > 0) {
+                    const gameGenres = game.genres.map(g => g.description);
+                    if (!gameGenres.some(genre => selectedGenres.includes(genre))) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Sort games by last_update date (most recent first)
+            filteredGames.sort((a, b) => {
+                // Handle cases where last_update might be missing
+                if (!a.last_update) return 1;
+                if (!b.last_update) return -1;
+                
+                // Convert dates for comparison (newer dates first)
+                const dateA = new Date(a.last_update);
+                const dateB = new Date(b.last_update);
+                
+                // Check if dates are valid
+                if (isNaN(dateA.getTime())) return 1;
+                if (isNaN(dateB.getTime())) return -1;
+                
+                return dateB - dateA; // Sort descending (newest first)
+            });
+            
+            // Update page info
+            updatePageInfo();
+            
+            // Render the filtered games
+            renderGames();
+            
+            // Update pagination
+            updatePagination();
+            
+            // Update filtered games count with sort indicator
+            document.getElementById('totalGamesCount').innerHTML = `${filteredGames.length.toLocaleString()} games <span style="opacity: 0.6; font-size: 0.75rem; margin-left: 0.5rem;">(sorted by id)</span>`;
+        }
+        
+        // Update page info
+        function updatePageInfo() {
+            const totalPages = Math.ceil(filteredGames.length / itemsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+
+        // Render game cards
+        function renderGames() {
+            const container = document.getElementById('gamesContainer');
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const gamesToShow = filteredGames.slice(startIndex, endIndex);
+            
+            // If no games match filters
+            if (gamesToShow.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info" style="background: rgba(15, 15, 15, 0.8); 
+                        border: 1px solid rgba(30, 30, 30, 0.8); border-radius: 8px; padding: 1rem;">
+                        <i class="fas fa-search me-2" style="color: rgba(255, 255, 255, 0.6);"></i>
+                        No games match your filters.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create game layout based on view mode
+            let html = `<div class="game-${viewMode}">`;
+            
+            gamesToShow.forEach(game => {
+                const metaScore = game.metacritic && game.metacritic.score;
+                let scoreClass = '';
+                
+                if (metaScore) {
+                    if (metaScore >= 75) scoreClass = '';
+                    else if (metaScore >= 50) scoreClass = 'yellow';
+                    else scoreClass = 'red';
+                }
+                
+                html += `
+                    <div class="game-card">
+                        ${userSettings.displayImages && game.image ? 
+                            `<img src="${game.image}" alt="${game.name}" class="game-image">` : 
+                            `<div class="game-image"></div>`
+                        }
+                        
+                        ${game.ext_user_account_notice ? 
+                            `<div class="launcher-button" data-tooltip="${game.ext_user_account_notice.replace(/<br>/g, ' ')}"><i class="fas fa-external-link-alt"></i> LAUNCHER</div>` : 
+                            ''
+                        }
+                        
+                        ${game.drm_notice ? 
+                            `<div class="drm-button" data-tooltip="${game.drm_notice.replace(/<br>/g, ' ')}"><i class="fas fa-shield-alt"></i> DRM</div>` : 
+                            ''
+                        }
+                        
+                        <div class="game-info">
+                            <div class="game-header">
+                                <h3 class="game-name">${game.name}</h3>
+                                ${userSettings.displayMetacriticScore && metaScore ? 
+                                    `<div class="meta-score ${scoreClass}">${metaScore}</div>` : 
+                                    ''
+                                }
+                            </div>
+                            
+                            <div class="game-id" data-id="${game.id}" onclick="copyGameId('${game.id}')">
+                                <i class="fas fa-hashtag"></i> ${game.id}
+                            </div>
+                            
+                            <div class="game-release">
+                                <i class="far fa-calendar-alt"></i> ${game.release_date || 'Unknown'}
+                            </div>
+                            
+                            <div class="game-genres">
+                                ${game.genres && game.genres.map(genre => 
+                                    `<span class="genre-tag">${genre.description}</span>`
+                                ).join('') || ''}
+                            </div>
+                            
+                            <div class="game-platform">
+                                <i class="fab fa-windows platform-icon ${game.platforms && game.platforms.windows ? 'active' : ''}"></i>
+                                <i class="fab fa-apple platform-icon ${game.platforms && game.platforms.mac ? 'active' : ''}"></i>
+                                <i class="fab fa-linux platform-icon ${game.platforms && game.platforms.linux ? 'active' : ''}"></i>
+                            </div>
+                            
+                            ${userSettings.displayLastUpdate && game.last_update ? 
+                                `<div class="last-update"><i class="fas fa-clock"></i> Updated: ${game.last_update}</div>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // Update pagination controls
+        function updatePagination() {
+            const paginationContainer = document.getElementById('pagination');
+            const totalPages = Math.ceil(filteredGames.length / itemsPerPage);
+            
+            let paginationHtml = '';
+            
+            // First page button
+            paginationHtml += `
+                <button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                        ${currentPage === 1 ? 'disabled' : 'onclick="changePage(1)"'}
+                        title="First page">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+            `;
+            
+            // Previous button
+            paginationHtml += `
+                <button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                        ${currentPage === 1 ? 'disabled' : 'onclick="changePage(' + (currentPage - 1) + ')"'}
+                        title="Previous page">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+            `;
+            
+            // Page number or ellipsis
+            if (totalPages > 1) {
+                const pagesToShow = getPagesToShow(currentPage, totalPages);
+                
+                pagesToShow.forEach(page => {
+                    if (page === '...') {
+                        paginationHtml += `<span class="page-ellipsis" style="margin: 0 0.25rem; opacity: 0.7;">...</span>`;
+                    } else {
+                        paginationHtml += `
+                            <button class="page-btn ${currentPage === page ? 'active' : ''}" 
+                                    onclick="changePage(${page})">
+                                ${page}
+                            </button>
+                        `;
+                    }
+                });
+            }
+            
+            // Next button
+            paginationHtml += `
+                <button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                        ${currentPage === totalPages ? 'disabled' : 'onclick="changePage(' + (currentPage + 1) + ')"'}
+                        title="Next page">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+            `;
+            
+            // Last page button
+            paginationHtml += `
+                <button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                        ${currentPage === totalPages ? 'disabled' : 'onclick="changePage(' + totalPages + ')"'}
+                        title="Last page">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = paginationHtml;
+        }
+        
+        // Helper function to determine which page numbers to show in pagination
+        function getPagesToShow(current, total) {
+            if (total <= 7) {
+                // Show all pages if there are 7 or fewer
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+            
+            // Always include first and last page
+            const pages = [1];
+            
+            if (current <= 3) {
+                // Near the beginning
+                pages.push(2, 3, 4, '...', total);
+            } else if (current >= total - 2) {
+                // Near the end
+                pages.push('...', total - 3, total - 2, total - 1, total);
+            } else {
+                // Middle - show current page with neighbors
+                pages.push('...', current - 1, current, current + 1, '...', total);
+            }
+            
+            return pages;
+        }
+        
+        // Initialize the page
+        function init() {
+            // Load user settings
+            loadUserSettings();
+            
+            // Load initial games (free by default)
+            loadGames('free');
+            
+            // Add tooltip container
+            const tooltipContainer = document.createElement('div');
+            tooltipContainer.id = 'tooltipContainer';
+            tooltipContainer.style.position = 'fixed';
+            tooltipContainer.style.display = 'none';
+            tooltipContainer.style.backgroundColor = 'rgba(10, 10, 10, 0.95)';
+            tooltipContainer.style.color = '#fff';
+            tooltipContainer.style.padding = '0.75rem';
+            tooltipContainer.style.borderRadius = '4px';
+            tooltipContainer.style.fontSize = '0.75rem';
+            tooltipContainer.style.maxWidth = '350px';
+            tooltipContainer.style.zIndex = '9999';
+            tooltipContainer.style.border = '1px solid rgba(50, 50, 50, 0.8)';
+            tooltipContainer.style.pointerEvents = 'none';
+            document.body.appendChild(tooltipContainer);
+            
+            // Add event listeners for notice tags
+            document.addEventListener('mouseover', function(e) {
+                if (e.target.classList.contains('notice-tag') && e.target.dataset.notice) {
+                    const tooltip = document.getElementById('tooltipContainer');
+                    tooltip.textContent = e.target.dataset.notice;
+                    tooltip.style.display = 'block';
+                }
+                // Handle LAUNCHER and DRM buttons tooltips
+                if ((e.target.classList.contains('launcher-button') || 
+                     e.target.classList.contains('drm-button') ||
+                     e.target.parentElement.classList.contains('launcher-button') ||
+                     e.target.parentElement.classList.contains('drm-button')) && 
+                    (e.target.dataset.tooltip || e.target.parentElement.dataset.tooltip)) {
+                    const tooltip = document.getElementById('tooltipContainer');
+                    tooltip.textContent = e.target.dataset.tooltip || e.target.parentElement.dataset.tooltip;
+                    tooltip.style.display = 'block';
+                }
+            });
+            
+            document.addEventListener('mouseout', function(e) {
+                if (e.target.classList.contains('notice-tag') || 
+                    e.target.classList.contains('launcher-button') || 
+                    e.target.classList.contains('drm-button') ||
+                    e.target.parentElement.classList.contains('launcher-button') ||
+                    e.target.parentElement.classList.contains('drm-button')) {
+                    const tooltip = document.getElementById('tooltipContainer');
+                    tooltip.style.display = 'none';
+                }
+            });
+            
+            // Update tooltip position on mouse move
+            document.addEventListener('mousemove', function(e) {
+                const tooltip = document.getElementById('tooltipContainer');
+                if (tooltip.style.display === 'block') {
+                    // Position tooltip near the cursor but don't overlap it
+                    const offset = 15;
+                    
+                    // Keep tooltip within viewport
+                    let left = e.clientX + offset;
+                    let top = e.clientY + offset;
+                    
+                    // Check right edge
+                    const tooltipWidth = tooltip.offsetWidth;
+                    if (left + tooltipWidth > window.innerWidth - 20) {
+                        left = e.clientX - tooltipWidth - offset;
+                    }
+                    
+                    // Check bottom edge
+                    const tooltipHeight = tooltip.offsetHeight;
+                    if (top + tooltipHeight > window.innerHeight - 20) {
+                        top = e.clientY - tooltipHeight - offset;
+                    }
+                    
+                    tooltip.style.left = left + 'px';
+                    tooltip.style.top = top + 'px';
+                    tooltip.style.transform = 'none';
+                    tooltip.style.bottom = 'auto';
+                }
+            });
+            
+            // Original tooltip CSS is no longer needed, override with style
+            const styleElement = document.createElement('style');
+            styleElement.innerHTML = `
+                .notice-tag[data-notice]:hover::after,
+                .notice-tag[data-notice]:hover::before {
+                    display: none !important;
+                }
+            `;
+            document.head.appendChild(styleElement);
+            
+            // Add event listeners for tabs
+            document.querySelectorAll('.game-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const access = tab.dataset.access;
+                    if (access !== currentAccess) {
+                        currentPage = 1; // Reset to first page
+                        loadGames(access);
+                        
+                        // Toggle premium notice
+                        const premiumNotice = document.getElementById('premiumNotice');
+                        if (access === 'premium') {
+                            premiumNotice.style.display = 'flex';
+                        } else {
+                            premiumNotice.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
+            // Add view toggle event listeners
+            document.getElementById('gridViewBtn').addEventListener('click', () => {
+                viewMode = 'grid';
+                updateViewButtons();
+                renderGames();
+                saveUserSettings();
+            });
+            
+            // Disable list view button
+            document.getElementById('listViewBtn').addEventListener('click', (e) => {
+                // Prevent default action
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+            
+            // Add event listener for search input
+            document.querySelector('.search-input').addEventListener('input', debounce(() => {
+                currentPage = 1; // Reset to first page
+                applyFiltersAndRender();
+            }, 300));
+            
+            // Add event listeners for filter dropdowns
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const dropdown = e.currentTarget.parentElement;
+                    dropdown.classList.toggle('active');
+                    
+                    // Close other dropdowns
+                    document.querySelectorAll('.filter-dropdown.active').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('active');
+                    });
+                    
+                    e.stopPropagation();
+                });
+            });
+            
+            // Add event listener for filter overlay to close dropdown
+            document.querySelector('.filter-overlay').addEventListener('click', () => {
+                document.querySelectorAll('.filter-dropdown.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            });
+            
+            // Add event listeners for reset and apply buttons
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                // Check all genre checkboxes
+                document.querySelectorAll('.genre-filter').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateSelectedGenresCount();
+            });
+            
+            document.getElementById('applyFilters').addEventListener('click', () => {
+                // Apply filters and close dropdown
+                applyFiltersAndRender();
+                document.querySelectorAll('.filter-dropdown.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            });
+            
+            // Items per page change
+            document.getElementById('itemsPerPageSelect').addEventListener('change', (e) => {
+                itemsPerPage = parseInt(e.target.value);
+                currentPage = 1; // Reset to first page
+                
+                // Save preference to localStorage
+                localStorage.setItem('gameListItemsPerPage', itemsPerPage);
+                
+                // Re-render
+                applyFiltersAndRender();
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.filter-dropdown.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            });
+            
+            // Prevent closing dropdown when clicking inside
+            document.querySelectorAll('.filter-dropdown-content').forEach(content => {
+                content.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+            
+            // Save settings button
+            const saveSettingsButton = document.getElementById('saveSettings');
+            if (saveSettingsButton) {
+                saveSettingsButton.addEventListener('click', () => {
+                    // Disabled functionality
+                    console.log('Settings functionality is disabled');
+                });
+            }
+            
+            // Smooth scroll to top when changing pages
+            window.addEventListener('scroll', function() {
+                const scrollY = window.scrollY;
+                if (scrollY > 200) {
+                    const backToTop = document.createElement('button');
+                    backToTop.id = 'backToTop';
+                    backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                    backToTop.style.position = 'fixed';
+                    backToTop.style.bottom = '20px';
+                    backToTop.style.right = '20px';
+                    backToTop.style.width = '40px';
+                    backToTop.style.height = '40px';
+                    backToTop.style.borderRadius = '50%';
+                    backToTop.style.backgroundColor = 'rgba(0, 102, 255, 0.2)';
+                    backToTop.style.border = '1px solid rgba(0, 102, 255, 0.3)';
+                    backToTop.style.color = '#fff';
+                    backToTop.style.display = 'flex';
+                    backToTop.style.justifyContent = 'center';
+                    backToTop.style.alignItems = 'center';
+                    backToTop.style.cursor = 'pointer';
+                    backToTop.style.zIndex = '1000';
+                    backToTop.style.transition = 'all 0.2s ease';
+                    
+                    if (!document.getElementById('backToTop')) {
+                        document.body.appendChild(backToTop);
+                    }
+                    
+                    backToTop.addEventListener('click', function() {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    });
+                } else {
+                    const backToTop = document.getElementById('backToTop');
+                    if (backToTop) {
+                        backToTop.remove();
+                    }
+                }
+            });
+            
+            // Setup auto-refresh every hour
+            setInterval(() => {
+                loadGames(currentAccess, true);
+            }, 3600000); // 1 hour
+        }
+        
+        // Helper function to debounce
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+        
+        // Make changePage function available globally
+        window.changePage = function(page) {
+            currentPage = page;
+            renderGames();
+            updatePageInfo();
+            updatePagination();
+            
+            // Scroll to top of game container with smooth animation
+            document.getElementById('gamesContainer').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        };
+        
+        // Make copyGameId function available globally
+        window.copyGameId = function(id) {
+            navigator.clipboard.writeText(id).then(() => {
+                // Visual feedback
+                const idElement = document.querySelector(`.game-id[data-id="${id}"]`);
+                const originalText = idElement.innerHTML;
+                const originalBg = idElement.style.backgroundColor;
+                const originalBorder = idElement.style.borderColor;
+                
+                // Apply copy success styles
+                idElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                idElement.style.backgroundColor = 'rgba(0, 102, 255, 0.2)';
+                idElement.style.borderColor = 'rgba(0, 102, 255, 0.5)';
+                
+                // Show global alert
+                showGlobalAlert('Game ID copied to clipboard', 'success');
+                
+                // Reset after animation
+                setTimeout(() => {
+                    idElement.innerHTML = originalText;
+                    idElement.style.backgroundColor = originalBg;
+                    idElement.style.borderColor = originalBorder;
+                }, 1500);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                showGlobalAlert('Failed to copy to clipboard. Please try again.', 'error');
+            });
+        };
+        
+        // Initialize
+        init();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - SWA V2{% endblock %}
+
+{% block content %}
+<!-- Single Container About Page -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="about-single-container">
+            <!-- Header -->
+            <div class="about-header">
+                <h1 class="about-title">About SWA V2</h1>
+                <p class="about-subtitle">Advanced Utility for Steam Tools Integration</p>
+            </div>
+
+            <!-- About Section -->
+            <div class="about-section">
+                <p>SWA V2 is a modern platform for accessing gaming content and digital services. We provide convenient access to a vast catalog of games, software, and digital products through our proprietary launcher.</p>
+                
+                <p>Our goal is to make gaming content accessible to all users with maximum convenience and ease of use. The platform offers seamless integration with Steam tools and provides an enhanced gaming experience.</p>
+
+                <p>The platform features access to over 60,000 games through our custom SWA V2 launcher, complete DLC and add-ons support, comprehensive device management system, and user-friendly web panel. We maintain active community support through Discord and Telegram channels.</p>
+
+                <p>Security is our priority with reliable data protection using advanced encryption, unique device codes for secure authentication, comprehensive access control with user rights management, and real-time activity monitoring for enhanced security.</p>
+
+                <p>Join thousands of users who have already discovered the world of gaming with SWA V2 - your gateway to endless entertainment!</p>
+                
+                <p><strong>Important Notice:</strong> All purchases are final. We do not offer refunds for any digital services or products purchased through our platform. Please carefully consider your purchase before completing the transaction.</p>
+
+                <p>For developers, our projects are open source and available on GitHub:</p>
+                
+                <div class="github-section">
+                    <a href="https://github.com/MONZikWasTaken/SWAV2-UI" target="_blank" rel="noopener noreferrer" class="github-btn">
+                        <i class="fab fa-github"></i>
+                        <span>SWAV2-UI (Web Interface)</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <a href="https://github.com/MONZikWasTaken/SWAV2" target="_blank" rel="noopener noreferrer" class="github-btn">
+                        <i class="fab fa-github"></i>
+                        <span>SWAV2 (Launcher)</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* About page single container styles */
+.about-single-container {
+    background: rgba(20, 20, 20, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header */
+.about-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+}
+
+.about-title {
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary), #00a3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+}
+
+.about-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Sections */
+.about-section, .advantages-section, .security-section, .cta-section {
+    margin-bottom: 40px;
+}
+
+.about-section h2, .advantages-section h2, .security-section h2, .cta-section h2 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.about-section h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 30px 0 20px 0;
+    color: var(--primary);
+}
+
+.about-section p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* GitHub Section */
+.github-section {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.github-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    background: #24292e;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    border: 1px solid #444d56;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.github-btn:hover {
+    background: #2f363d;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.github-btn i.fab.fa-github {
+    font-size: 20px;
+}
+
+.github-btn i.fas.fa-external-link-alt {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Features Grid */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.features-grid .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.features-grid .feature-item:hover {
+    background: rgba(40, 40, 40, 0.5);
+    transform: translateY(-2px);
+}
+
+.features-grid .feature-item i {
+    color: var(--primary);
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.features-grid .feature-item span {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* Advantages Grid */
+.advantages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.advantage-card {
+    text-align: center;
+    padding: 24px;
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.advantage-card:hover {
+    transform: translateY(-5px);
+    background: rgba(40, 40, 40, 0.5);
+}
+
+.advantage-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.advantage-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.advantage-card h4 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.advantage-card p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Security List */
+.security-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.security-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.security-item:hover {
+    background: rgba(40, 40, 40, 0.5);
+}
+
+.security-item i {
+    color: var(--primary);
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.security-text h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--text);
+}
+
+.security-text p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* CTA Section */
+.cta-section {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+}
+
+.cta-section h2 {
+    font-size: 32px;
+    margin-bottom: 16px;
+}
+
+.cta-section p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.cta-btn.primary {
+    background: var(--primary);
+    color: white;
+}
+
+.cta-btn.premium {
+    background: linear-gradient(90deg, #ffc107, #ff9800);
+    color: #000;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.cta-btn.success {
+    background: #28a745;
+    color: white;
+}
+
+.cta-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cta-btn.primary:hover {
+    background: #0056d6;
+}
+
+.cta-btn.premium:hover {
+    background: linear-gradient(90deg, #ffb800, #ff8800);
+}
+
+.cta-btn.success:hover {
+    background: #218838;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .about-single-container {
+        padding: 24px;
+    }
+    
+    .about-title {
+        font-size: 36px;
+    }
+    
+    .about-subtitle {
+        font-size: 16px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .advantages-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .security-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .github-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .github-btn {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-btn {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

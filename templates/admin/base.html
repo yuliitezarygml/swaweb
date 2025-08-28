@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}SWA V2 - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-content">
+    <nav class="admin-navbar">
+       
+    </nav>
+    <div class="admin-main">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-navbar {
+        width: 100%;
+        background: rgba(25, 25, 35, 0.7);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 20px;
+    }
+    .admin-navbar ul {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0 10px;
+    }
+    .admin-navbar li {
+        margin: 0 10px 0 0;
+    }
+    .admin-navbar a {
+        display: flex;
+        align-items: center;
+        padding: 14px 18px 12px 18px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 17px;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .admin-navbar a i {
+        margin-right: 8px;
+        width: 20px;
+        text-align: center;
+    }
+    .admin-navbar a:hover {
+        color: #0066ff;
+        background: rgba(0, 102, 255, 0.07);
+    }
+    .admin-navbar a.active {
+        color: #0066ff;
+        border-bottom: 2.5px solid #0066ff;
+        background: rgba(0, 102, 255, 0.10);
+    }
+    .admin-main {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %} 

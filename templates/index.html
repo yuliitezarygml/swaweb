@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}SWA V2 - Advanced Utility for steam{% endblock %}
+
+{% block content %}
+<!-- Download Modal -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-9">
+        <div class="features-box">
+            <h2 class="mb-3">Features</h2>
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>60000+ Games</h3>
+                        <p>Access a vast library of games with the most up-to-date titles</p>
+                        <a href="/gamelist" class="feature-link">View Game List</a>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>DLC Support</h3>
+                        <p>Access and manage downloadable content for your games</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon-wrapper">
+                        <i class="fas fa-unlock"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Launcher Bypasses</h3>
+                        <p>Bypass supported game launchers for seamless gaming</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="stats-box">
+            <h2 class="mb-3">Live Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-icon-wrapper">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="stat-info">                                
+                        <div class="stat-value">{{ stats.total_users }}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon-wrapper">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.daily_users }}</div>
+                        <div class="stat-label">Daily Users</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon-wrapper">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ stats.online_users }}</div>
+                        <div class="stat-label">Online Now</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="stats-section">
+            <div class="stats-header">
+                <h2>Game Statistics</h2>
+                <div class="date-dropdown">
+                    <button class="date-dropdown-btn">
+                        <span class="selected-date">Today</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="date-dropdown-content">
+                        <div class="date-option" data-range="1">Today</div>
+                        <div class="date-option" data-range="7">Week</div>
+                        <div class="date-option" data-range="14">Month</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="gamesAddedChart"></canvas>
+            </div>
+            
+            <div class="row stats-highlights mt-4">
+                <div class="col-md-4 col-sm-6">
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="highlight-content">
+                            <h3 class="highlight-value" id="total-games-added">{{ game_stats.total_games_today }}</h3>
+                            <p class="highlight-label">Total Games Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="highlight-content">
+                            <h3 class="highlight-value" id="avg-per-day">{{ game_stats.avg_per_day }}</h3>
+                            <p class="highlight-label">Avg. Per Day</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="highlight-content">
+                            <h3 class="highlight-value" id="most-active-hour">{{ game_stats.most_active_hour }}</h3>
+                            <p class="highlight-label">Most Active Hour</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="donate-section">
+            <h2>Support the Project</h2>
+            <p class="lead">Help us maintain and improve SWA V2 by donating cryptocurrency</p>
+            <div class="crypto-addresses">
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/bitcoin-btc-logo.svg" alt="BTC">
+                        </div>
+                        <h4 class="h5 mb-0">Bitcoin (BTC)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="bc1qhsz443as6d3rqqy9h8ur0dm866f26s2854k3gk">bc1qhsz443as6d3rqqy9h8ur0dm866f26s2854k3gk</code>
+                        <button class="copy-btn" data-clipboard-text="bc1qhsz443as6d3rqqy9h8ur0dm866f26s2854k3gk">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/ethereum-eth-logo.svg" alt="ETH">
+                        </div>
+                        <h4 class="h5 mb-0">Ethereum (ETH)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7</code>
+                        <button class="copy-btn" data-clipboard-text="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/tether-usdt-logo.svg" alt="USDT">
+                        </div>
+                        <h4 class="h5 mb-0">USDT (TRC-20)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="TBU3C1vqdWawhoNr2SxpwghzbNw6ca7vo2">TBU3C1vqdWawhoNr2SxpwghzbNw6ca7vo2</code>
+                        <button class="copy-btn" data-clipboard-text="TBU3C1vqdWawhoNr2SxpwghzbNw6ca7vo2">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/litecoin-ltc-logo.svg" alt="LTC">
+                        </div>
+                        <h4 class="h5 mb-0">Litecoin (LTC)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="ltc1qd2zcy3xze40sjwgkw8f34xr6yyz4l96xxkpduy">ltc1qd2zcy3xze40sjwgkw8f34xr6yyz4l96xxkpduy</code>
+                        <button class="copy-btn" data-clipboard-text="ltc1qd2zcy3xze40sjwgkw8f34xr6yyz4l96xxkpduy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/dogecoin-doge-logo.svg" alt="DOGE">
+                        </div>
+                        <h4 class="h5 mb-0">Dogecoin (DOGE)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="DQuf6SdUQMfLtjQvvWzGQVJBrNWBAWSKb7">DQuf6SdUQMfLtjQvvWzGQVJBrNWBAWSKb7</code>
+                        <button class="copy-btn" data-clipboard-text="DQuf6SdUQMfLtjQvvWzGQVJBrNWBAWSKb7">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/cardano-ada-logo.svg" alt="ADA">
+                        </div>
+                        <h4 class="h5 mb-0">Cardano (ADA)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="addr1q87kanjzqurfv0q2heddhpfjx4l9zzdlzcun2ae3pd5undwzrlff3z7us3n032yqfn0c9zscl6leyh6fyafks0kwcskqy3esp9">addr1q87kanjzqurfv0q2heddhpfjx4l9zzdlzcun2ae3pd5undwzrlff3z7us3n032yqfn0c9zscl6leyh6fyafks0kwcskqy3esp9</code>
+                        <button class="copy-btn" data-clipboard-text="addr1q87kanjzqurfv0q2heddhpfjx4l9zzdlzcun2ae3pd5undwzrlff3z7us3n032yqfn0c9zscl6leyh6fyafks0kwcskqy3esp9">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/xrp-xrp-logo.svg" alt="XRP">
+                        </div>
+                        <h4 class="h5 mb-0">Ripple (XRP)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="rBwTwhLvp2pr6gYLwhVTL2hRaeC3wY8tYK">rBwTwhLvp2pr6gYLwhVTL2hRaeC3wY8tYK</code>
+                        <button class="copy-btn" data-clipboard-text="rBwTwhLvp2pr6gYLwhVTL2hRaeC3wY8tYK">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/polkadot-new-dot-logo.svg" alt="DOT">
+                        </div>
+                        <h4 class="h5 mb-0">Polkadot (DOT)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="1pTkkdASubn3bKiGQs2zDpuDZ4CiZUFjVU6bDu879HiQo2S">1pTkkdASubn3bKiGQs2zDpuDZ4CiZUFjVU6bDu879HiQo2S</code>
+                        <button class="copy-btn" data-clipboard-text="1pTkkdASubn3bKiGQs2zDpuDZ4CiZUFjVU6bDu879HiQo2S">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/bnb-bnb-logo.svg" alt="BNB">
+                        </div>
+                        <h4 class="h5 mb-0">Binance Coin (BNB)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7</code>
+                        <button class="copy-btn" data-clipboard-text="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/toncoin-ton-logo.svg" alt="TON">
+                        </div>
+                        <h4 class="h5 mb-0">TON Coin (TON)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="UQAEFXnUV4by1zg6VEEz-sCIMP-rMT0kZiXFgSWlV9E4LsU5">UQAEFXnUV4by1zg6VEEz-sCIMP-rMT0kZiXFgSWlV9E4LsU5</code>
+                        <button class="copy-btn" data-clipboard-text="UQAEFXnUV4by1zg6VEEz-sCIMP-rMT0kZiXFgSWlV9E4LsU5">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/solana-sol-logo.svg" alt="SOL">
+                        </div>
+                        <h4 class="h5 mb-0">Solana (SOL)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="8LosvUWwgUrzFZVenaY4X1vcfoqdnu9whGv1Jp8jbDHE">8LosvUWwgUrzFZVenaY4X1vcfoqdnu9whGv1Jp8jbDHE</code>
+                        <button class="copy-btn" data-clipboard-text="8LosvUWwgUrzFZVenaY4X1vcfoqdnu9whGv1Jp8jbDHE">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="crypto-card">
+                    <div class="crypto-card-header">
+                        <div class="crypto-icon-wrapper">
+                            <img src="/static/images/crypto/polygon-matic-logo.svg" alt="MATIC">
+                        </div>
+                        <h4 class="h5 mb-0">Polygon (MATIC)</h4>
+                    </div>
+                    <div class="crypto-address">
+                        <code class="small" data-full-address="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7</code>
+                        <button class="copy-btn" data-clipboard-text="0x8320f72d4e34A0627b7cE9dBA6B3a851bb47ffF7">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make the entire code area clickable for copying
+        document.querySelectorAll('.crypto-address code').forEach(code => {
+            code.addEventListener('click', function() {
+                const text = this.getAttribute('data-full-address');
+                navigator.clipboard.writeText(text).then(() => {
+                    const button = this.nextElementSibling;
+                    const originalHtml = button.innerHTML;
+                    
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    button.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.classList.remove('copied');
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Game Statistics Functionality
+        // Chart initialization
+        const ctx = document.getElementById('gamesAddedChart').getContext('2d');
+        
+        // Gradient fill for the chart
+        const gradientFill = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientFill.addColorStop(0, 'rgba(0, 102, 255, 0.4)');
+        gradientFill.addColorStop(1, 'rgba(0, 102, 255, 0.05)');
+        
+        // Chart configuration
+        const chartConfig = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Games Added',
+                    data: [],
+                    borderColor: '#0066ff',
+                    backgroundColor: gradientFill,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#0066ff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(10, 10, 10, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#0a0a0a',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return tooltipItems[0].label;
+                            },
+                            label: function(context) {
+                                return `Games Added: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#808080',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#808080',
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                if (value >= 1000) {
+                                    return (value / 1000).toLocaleString() + 'k';
+                                }
+                                return value;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        };
+        
+        // Create the chart
+        const gamesAddedChart = new Chart(ctx, chartConfig);
+        
+        // Function to load chart data via AJAX
+        function loadChartData(range = '1', date = null) {
+            // Build URL with parameters
+            let url = '/api/game_stats?range=' + range;
+            if (date) {
+                url += '&date=' + date;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update chart with API data
+                    gamesAddedChart.data.labels = data.labels;
+                    gamesAddedChart.data.datasets[0].data = data.data;
+                    
+                    // Calculate min/max for better scaling
+                    const values = data.data;
+                    if (values && values.length > 0) {
+                        const minValue = Math.min(...values.filter(v => v !== null));
+                        const maxValue = Math.max(...values.filter(v => v !== null));
+                        const buffer = (maxValue - minValue) * 0.1;
+                        
+                        gamesAddedChart.options.scales.y.min = Math.max(0, Math.floor(minValue - buffer));
+                        gamesAddedChart.options.scales.y.max = Math.ceil(maxValue + buffer);
+                    }
+                    
+                    gamesAddedChart.update();
+                    
+                    // Display any relevant data in the summary blocks if data range is 1 (today)
+                    if (range === '1') {
+                        document.getElementById('total-games-added').textContent = data.total_games.toLocaleString();
+                    } else {
+                        // Update total games for week or month view
+                        document.getElementById('total-games-added').textContent = data.total_games.toLocaleString();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching chart data:', error);
+                });
+        }
+        
+        // Date range buttons functionality
+        const dateDropdownBtn = document.querySelector('.date-dropdown-btn');
+        const dateDropdown = document.querySelector('.date-dropdown');
+        const dateOptions = document.querySelectorAll('.date-option');
+        const selectedDateText = document.querySelector('.selected-date');
+        
+        // Toggle dropdown when clicking the button
+        dateDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dateDropdown.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking elsewhere on the page
+        document.addEventListener('click', function() {
+            dateDropdown.classList.remove('active');
+        });
+        
+        // Handle option selection
+        dateOptions.forEach(option => {
+            // Set initial active state for Today (data-range="1")
+            if (option.getAttribute('data-range') === '1') {
+                option.classList.add('active');
+            }
+            
+            option.addEventListener('click', function() {
+                // Remove active class from all options
+                dateOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Add active class to clicked option
+                this.classList.add('active');
+                
+                // Update the dropdown button text
+                selectedDateText.textContent = this.textContent;
+                
+                // Close the dropdown
+                dateDropdown.classList.remove('active');
+                
+                // Update chart data with selected range
+                const range = this.getAttribute('data-range');
+                loadChartData(range);
+                
+                // Update the highlight card label based on selected range
+                if (range === '1') {
+                    document.querySelector('.stats-highlights .highlight-card:first-child .highlight-label').textContent = 'Total Games Today';
+                } else if (range === '7') {
+                    document.querySelector('.stats-highlights .highlight-card:first-child .highlight-label').textContent = 'Games This Week';
+                } else {
+                    document.querySelector('.stats-highlights .highlight-card:first-child .highlight-label').textContent = 'Games This Month';
+                }
+            });
+        });
+        
+        // Initial chart data load with range=1 (Today)
+        loadChartData('1');
+    });
+</script>
+{% endblock %} 

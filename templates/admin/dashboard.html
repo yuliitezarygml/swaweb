@@ -1,0 +1,2236 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}SWA V2 - Admin Dashboard{% endblock %}
+
+{% block admin_content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Admin Panel</h1>
+        <div class="header-actions">
+            <span class="user-info">
+                <i class="fas fa-user-shield"></i> Admin
+            </span>
+        </div>
+    </div>
+    
+    <div class="admin-stats">
+        <div class="stat-box">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Users</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
+            <div class="stat-value">{{ stats.games_count }}</div>
+            <div class="stat-label">Games</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon"><i class="fas fa-crown"></i></div>
+            <div class="stat-value">{{ stats.premium_users }}</div>
+            <div class="stat-label">Premium</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon"><i class="fas fa-signal"></i></div>
+            <div class="stat-value">{{ stats.online_users }}</div>
+            <div class="stat-label">Online</div>
+        </div>
+    </div>
+    
+    <div class="admin-tabs">
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="users">Users</button>
+            <button class="tab-btn" data-tab="stats">Statistics</button>
+            <button class="tab-btn" data-tab="promo">Promo Codes</button>
+        </div>
+        
+        <div class="tab-content">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane active" id="dashboard-tab">
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>Recent Activity</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if activities %}
+                        <div class="activity-list">
+                            {% for activity in activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="{{ activity.icon }}"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">{{ activity.text }}</div>
+                                    <div class="activity-time">{{ activity.time }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="no-data">No recent activities to display</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Tab -->
+            <div class="tab-pane" id="users-tab">
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>User Management</h2>
+                        <div class="card-actions">
+                            <button class="action-btn primary" id="createUserBtn">
+                                <i class="fas fa-user-plus"></i> Add User
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="search-bar">
+                            <input type="text" id="userSearch" placeholder="Search users...">
+                            <select id="statusFilter">
+                                <option value="all">All Status</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <input type="number" id="perPageInput" min="1" max="500" value="10" style="max-width:90px;" />
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="loading-placeholder">
+                                        <td colspan="5" class="text-center">
+                                            <div class="loading-spinner"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination-controls">
+                            <div class="pagination-info">Showing <span id="showing-range">0-0</span> of <span id="total-users">0</span> users</div>
+                            <div class="pagination-buttons">
+                                <button class="pagination-btn" id="prevPage" disabled><i class="fas fa-chevron-left"></i></button>
+                                <span class="page-indicator">Page <span id="current-page">1</span></span>
+                                <button class="pagination-btn" id="nextPage" disabled><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        
+            <!-- Stats Tab -->
+            <div class="tab-pane" id="stats-tab">
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>System Statistics</h2>
+                        <div class="card-actions">
+                            <select id="timeRangeSelect">
+                                <option value="day">Last 24 Hours</option>
+                                <option value="week">Last Week</option>
+                                <option value="month">Last Month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="usageChart"></canvas>
+                        </div>
+                        
+                        <div class="stats-highlights">
+                            <div class="highlight-box">
+                                <div class="highlight-value">{{ stats.daily_users }}</div>
+                                <div class="highlight-label">Daily Active Users</div>
+                            </div>
+                            <div class="highlight-box">
+                                <div class="highlight-value">{{ stats.game_sessions }}</div>
+                                <div class="highlight-label">Game Sessions</div>
+                            </div>
+                            <div class="highlight-box">
+                                <div class="highlight-value">{{ stats.new_users }}</div>
+                                <div class="highlight-label">New Registrations</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Promo Codes Tab -->
+            <div class="tab-pane" id="promo-tab">
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>Promo Code Management</h2>
+                        <div class="card-actions btn-group">
+                            
+                            <a href="{{ url_for('admin_promo_codes') }}" class="action-btn primary">
+                                <i class="fas fa-ticket-alt"></i> Manage Promo Codes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="promo-quick-create">
+                            <h3>Create Quick Promo Code</h3>
+                            <form action="{{ url_for('admin_create_promo_code') }}" method="post" class="quick-promo-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="quickDescription">Description</label>
+                                        <input type="text" id="quickDescription" name="description" class="form-control" placeholder="Promotion description" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="quickUsesLimit">Uses Limit</label>
+                                        <input type="number" id="quickUsesLimit" name="uses_limit" class="form-control" value="1" min="0">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="quickGroup">Group</label>
+                                        <select id="quickGroup" name="group" class="form-control">
+                                             <option value="default">Default</option>
+                            <option value="vip">1 Month Premium Stock</option>
+                            <option value="special">6 Month Premium Stock</option>
+                            <option value="seasonal">Lifetime Premium Stock</option>
+                            <option value="partner">1 Month Slots Stock</option>
+                            <option value="partner">6 Month Slots Stock</option>
+                            <option value="partner">Lifetime Slots Stock</option>
+                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group custom-group-container" style="display:none;">
+                                        <label for="quickCustomGroup">Custom Group Name</label>
+                                        <input type="text" id="quickCustomGroup" name="custom_group" class="form-control" placeholder="Enter custom group name">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="quickGivesPremium" name="gives_premium" class="form-check-input">
+                                            <label for="quickGivesPremium" class="form-check-label">Gives Premium</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="quickSlots">Slots</label>
+                                        <input type="number" id="quickSlots" name="slots" class="form-control" value="0" min="0">
+                                    </div>
+                                </div>
+                                
+                                <!-- Premium Duration Slider -->
+                                <div class="form-group premium-duration-container" style="display:none;">
+                                    <label for="quickPremiumDuration" class="form-label">Premium Duration</label>
+                                    <input type="range" class="form-range" id="quickPremiumDuration" name="premium_duration" min="1" max="7" value="7" step="1">
+                                    <div class="d-flex justify-content-between small text-muted form-range-labels">
+                                        <span>1D</span>
+                                        <span>7D</span>
+                                        <span>1M</span>
+                                        <span>3M</span>
+                                        <span>6M</span>
+                                        <span>1Y</span>
+                                        <span>∞</span>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <span class="selected-duration badge bg-primary">Permanent</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Slots Duration Slider -->
+                                <div class="form-group slots-duration-container" style="display:none;">
+                                    <label for="quickSlotsDuration" class="form-label">Slots Duration</label>
+                                    <input type="range" class="form-range" id="quickSlotsDuration" name="slots_duration" min="1" max="7" value="3" step="1">
+                                    <div class="d-flex justify-content-between small text-muted form-range-labels">
+                                        <span>1D</span>
+                                        <span>7D</span>
+                                        <span>1M</span>
+                                        <span>3M</span>
+                                        <span>6M</span>
+                                        <span>1Y</span>
+                                        <span>∞</span>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <span class="selected-slots-duration badge bg-primary">1 Month</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Create Promo Code</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="promo-bulk-create mt-5 pt-4 border-top">
+                            <h3>Create Bulk Promo Codes</h3>
+                            <form id="bulkCreatePromoForm-page" class="quick-promo-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="bulk_count-page">Number of Codes (max 100)</label>
+                                        <input type="number" class="form-control" id="bulk_count-page" name="count" value="10" min="1" max="100">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bulk_uses_limit-page">Usage Limit (0 = unlimited)</label>
+                                        <input type="number" class="form-control" id="bulk_uses_limit-page" name="uses_limit" value="1" min="0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bulk_description-page">Description</label>
+                                    <input type="text" class="form-control" id="bulk_description-page" name="description" required placeholder="Promotion description">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="bulkGroup-page">Group</label>
+                                        <select id="bulkGroup-page" name="group" class="form-control">
+                                             <option value="default">Default</option>
+                            <option value="vip">1 Month Premium Stock</option>
+                            <option value="special">6 Month Premium Stock</option>
+                            <option value="seasonal">Lifetime Premium Stock</option>
+                            <option value="partner">1 Month Slots Stock</option>
+                            <option value="partner">6 Month Slots Stock</option>
+                            <option value="partner">Lifetime Slots Stock</option>
+                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group bulk-custom-group-container" style="display:none;">
+                                        <label for="bulkCustomGroup-page">Custom Group Name</label>
+                                        <input type="text" id="bulkCustomGroup-page" name="custom_group" class="form-control" placeholder="Enter custom group name">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="bulk_gives_premium-page" name="gives_premium">
+                                            <label class="form-check-label" for="bulk_gives_premium-page">Gives Premium</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bulk_slots-page">Number of Slots</label>
+                                        <input type="number" class="form-control" id="bulk_slots-page" name="slots" value="0" min="0">
+                                    </div>
+                                </div>
+                                
+                                <!-- Premium Duration Slider for Bulk -->
+                                <div class="form-group bulk-premium-duration-container" style="display:none;">
+                                    <label for="bulkPremiumDuration-page" class="form-label">Premium Duration</label>
+                                    <input type="range" class="form-range" id="bulkPremiumDuration-page" name="premium_duration" min="1" max="7" value="7" step="1">
+                                    <div class="d-flex justify-content-between small text-muted form-range-labels">
+                                        <span>1D</span>
+                                        <span>7D</span>
+                                        <span>1M</span>
+                                        <span>3M</span>
+                                        <span>6M</span>
+                                        <span>1Y</span>
+                                        <span>∞</span>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <span class="selected-bulk-duration badge bg-primary">Permanent</span>
+                                    </div>
+                                </div>
+                        
+                                <!-- Slots Duration Slider for Bulk -->
+                                <div class="form-group bulk-slots-duration-container" style="display:none;">
+                                    <label for="bulkSlotsDuration-page" class="form-label">Slots Duration</label>
+                                    <input type="range" class="form-range" id="bulkSlotsDuration-page" name="slots_duration" min="1" max="7" value="3" step="1">
+                                    <div class="d-flex justify-content-between small text-muted form-range-labels">
+                                        <span>1D</span>
+                                        <span>7D</span>
+                                        <span>1M</span>
+                                        <span>3M</span>
+                                        <span>6M</span>
+                                        <span>1Y</span>
+                                        <span>∞</span>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <span class="selected-bulk-slots-duration badge bg-primary">1 Month</span>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Create Bulk Codes</button>
+                                </div>
+                            </form>
+                             <div id="bulk-result-view-page" style="display: none;" class="mt-4">
+                                <h5>Generated Codes:</h5>
+                                <textarea id="generated-codes-textarea-page" class="form-control" rows="8" readonly></textarea>
+                                <button id="copy-codes-btn-page" class="btn btn-success mt-2">
+                                    <i class="fas fa-copy"></i> Copy Codes
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="promo-info mt-4">
+                            <p>For more detailed promo code management, including viewing active codes, editing, and full statistics, please visit the <a href="{{ url_for('admin_promo_codes') }}">Promo Code Management</a> page.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Create Promo Modal -->
+<div class="modal fade" id="bulkCreatePromoModal" tabindex="-1" aria-labelledby="bulkCreatePromoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: #23232a; color: #fff;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkCreatePromoModalLabel">Bulk Create Promo Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="bulk-result-view-dash" style="display: none;">
+                    <h5>Generated Codes:</h5>
+                    <textarea id="generated-codes-textarea-dash" class="form-control" rows="8" readonly></textarea>
+                    <button id="copy-codes-btn-dash" class="btn btn-success mt-2">
+                        <i class="fas fa-copy"></i> Copy Codes
+                    </button>
+                </div>
+
+                <form id="bulkCreatePromoForm-dash" style="display: block;">
+                    <div class="form-group">
+                        <label for="bulk_count-dash">Number of Codes (max 100)</label>
+                        <input type="number" class="form-control" id="bulk_count-dash" name="count" value="10" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_description-dash">Description</label>
+                        <input type="text" class="form-control" id="bulk_description-dash" name="description" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bulkGroup-dash">Group</label>
+                            <select id="bulkGroup-dash" name="group" class="form-control">
+                            <option value="default">Default</option>
+                            <option value="vip">1 Month Premium Stock</option>
+                            <option value="special">6 Month Premium Stock</option>
+                            <option value="seasonal">Lifetime Premium Stock</option>
+                            <option value="partner">1 Month Slots Stock</option>
+                            <option value="partner">6 Month Slots Stock</option>
+                            <option value="partner">Lifetime Slots Stock</option>
+                            <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group bulk-custom-group-container-dash" style="display:none;">
+                            <label for="bulkCustomGroup-dash">Custom Group Name</label>
+                            <input type="text" id="bulkCustomGroup-dash" name="custom_group" class="form-control" placeholder="Enter custom group name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_uses_limit-dash">Usage Limit (0 = unlimited)</label>
+                        <input type="number" class="form-control" id="bulk_uses_limit-dash" name="uses_limit" value="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_expires_at-dash">Expiration Date (leave empty)</label>
+                        <input type="date" class="form-control" id="bulk_expires_at-dash" name="expires_at">
+                    </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="bulk_gives_premium-dash" name="gives_premium">
+                        <label class="form-check-label" for="bulk_gives_premium-dash">Grants premium</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_slots-dash">Number of Slots (0 = none)</label>
+                        <input type="number" class="form-control" id="bulk_slots-dash" name="slots" value="0" min="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="bulkCreatePromoForm-dash" class="btn btn-primary" id="bulk-create-btn-dash">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Modal Template -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">User Details</h3>
+            <button class="close-modal"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Form will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay"></div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Admin Dashboard Styles */
+    .admin-container {
+        max-width: 1200px;
+        margin: 30px auto;
+    }
+    
+    /* Header */
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .admin-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #0066ff;
+        margin: 0;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        background: rgba(25, 25, 35, 0.5);
+        padding: 8px 15px;
+        border-radius: 50px;
+    }
+    
+    /* Stats */
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: rgba(25, 25, 35, 0.5);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .stat-icon {
+        color: #0066ff;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    /* Tabs */
+    .admin-tabs .tab-navigation {
+        display: flex;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .admin-tabs .tab-btn {
+        padding: 10px 24px;
+        background: transparent;
+        border: none;
+        color: #e0e0e0;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+    }
+    
+    .admin-tabs .tab-btn.active {
+        color: #0066ff;
+    }
+    
+    .admin-tabs .tab-btn:hover {
+        color: #3399ff;
+    }
+    
+    .admin-tabs .tab-btn:after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #0066ff;
+        transform: scaleX(0);
+        transition: transform 0.2s;
+    }
+    
+    .admin-tabs .tab-btn.active:after {
+        transform: scaleX(1);
+    }
+    
+    .tab-content {
+        position: relative;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    /* Cards */
+    .admin-card {
+        background: rgba(25, 25, 35, 0.5);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .card-header h2 {
+        font-size: 18px;
+        font-weight: 500;
+        color: white;
+        margin: 0;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    /* Activity List */
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        background: rgba(35, 35, 45, 0.5);
+        border-radius: 8px;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 102, 255, 0.1);
+        border-radius: 8px;
+        color: #0066ff;
+    }
+    
+    .activity-text {
+        font-size: 14px;
+        color: white;
+    }
+    
+    .activity-time {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+    
+    /* Search Bar */
+    .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .search-bar input[type="text"] {
+        flex: 1;
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: white;
+        padding: 8px 15px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+    
+    .search-bar select {
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: white;
+        padding: 8px 15px;
+        font-size: 14px;
+        border-radius: 6px;
+        min-width: 120px;
+    }
+    
+    /* Table */
+    .table-container {
+        margin-bottom: 20px;
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .data-table th {
+        text-align: left;
+        padding: 10px 15px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .data-table td {
+        padding: 10px 15px;
+        font-size: 14px;
+        color: white;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Pagination */
+    .pagination-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .pagination-btn {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+    }
+    
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Game Grid */
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .game-card {
+        background: rgba(35, 35, 45, 0.5);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .game-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+    }
+    
+    .game-info {
+        padding: 10px;
+    }
+    
+    .game-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .game-access {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    .game-access.premium {
+        color: #9966ff;
+    }
+    
+    /* Charts */
+    .chart-container {
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    /* Stats Highlights */
+    .stats-highlights {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .highlight-box {
+        background: rgba(35, 35, 45, 0.5);
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .highlight-value {
+        font-size: 22px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 5px;
+    }
+    
+    .highlight-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        color: white;
+        padding: 8px 15px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    
+    .action-btn.primary {
+        background: #0066ff;
+        border-color: #0066ff;
+    }
+     .action-btn.success {
+        background: #28a745;
+        border-color: #28a745;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(25, 25, 35, 0.9);
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        z-index: 1001;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .modal.active,
+    .modal-overlay.active {
+        display: block;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .modal-header h3 {
+        font-size: 18px;
+        font-weight: 500;
+        color: white;
+        margin: 0;
+    }
+    
+    .close-modal {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 16px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .admin-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .stats-highlights {
+            grid-template-columns: 1fr;
+        }
+        
+        .tab-navigation {
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .games-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+    }
+    
+    /* Loading */
+    .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(0, 102, 255, 0.1);
+        border-top-color: #0066ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-placeholder {
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 30px;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+    
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"],
+    .form-group input[type="number"],
+    .form-group input[type="date"],
+    .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        color: white;
+        font-size: 14px;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .action-btn.small {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .action-btn.danger {
+        background: rgba(255, 50, 50, 0.8);
+        border-color: rgba(255, 50, 50, 0.8);
+    }
+    
+    .status {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status.standard {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
+    
+    .status.premium {
+        background: rgba(153, 102, 255, 0.2);
+        color: #9966ff;
+    }
+    
+    .status.admin {
+        background: rgba(0, 102, 255, 0.2);
+        color: #0066ff;
+    }
+    
+    .confirm-delete p {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #ff5050;
+        font-weight: 500;
+    }
+    
+    /* Error Message */
+    .error-message {
+        color: #ff5050;
+        background: rgba(255, 80, 80, 0.1);
+        border: 1px solid rgba(255, 80, 80, 0.2);
+        padding: 12px 15px;
+        border-radius: 6px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    /* Success Message */
+    .success-message {
+        color: #50c878;
+        background: rgba(80, 200, 120, 0.1);
+        border: 1px solid rgba(80, 200, 120, 0.2);
+        padding: 12px 15px;
+        border-radius: 6px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    /* Form Focus States */
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: rgba(0, 102, 255, 0.5);
+        box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    
+    /* Checkbox Styling */
+    .form-check {
+        align-items: center;
+        display: flex;
+    }
+    .form-check-input {
+        margin-right: 8px;
+        accent-color: #0066ff;
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Device List Styling */
+    .device-list {
+        margin: 15px 0;
+    }
+    
+    .device-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(35, 35, 45, 0.5);
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .device-info {
+        flex: 1;
+    }
+    
+    .device-name {
+        font-weight: 500;
+        font-size: 15px;
+        color: white;
+        margin-bottom: 4px;
+    }
+    
+    .device-detail {
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+    
+    .device-detail span {
+        margin-right: 15px;
+    }
+    
+    .device-actions {
+        margin-left: 15px;
+    }
+    
+    /* Modal Animation */
+    .modal {
+        transition: transform 0.3s ease-out, opacity 0.3s ease;
+        transform: translate(-50%, -60%);
+        opacity: 0;
+    }
+    
+    .modal.active {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+    
+    .modal-overlay {
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+    
+    .modal-overlay.active {
+        opacity: 1;
+    }
+    
+    /* Tooltip Styling */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .tooltip .tooltip-text {
+        visibility: hidden;
+        width: 120px;
+        background-color: rgba(25, 25, 35, 0.9);
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+        pointer-events: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    
+    /* Badge Styling */
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .badge.online {
+        background: rgba(80, 200, 120, 0.2);
+        color: #50c878;
+    }
+    
+    .badge.offline {
+        background: rgba(150, 150, 150, 0.2);
+        color: #999;
+    }
+    
+    .form-range-labels span {
+        color: #fff !important;
+        background: transparent !important;
+        font-weight: 500;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+    }
+    
+    #perPageInput {
+        background: rgba(35, 35, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: white;
+        padding: 8px 15px;
+        font-size: 14px;
+        border-radius: 6px;
+        min-width: 70px;
+        max-width: 90px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #perPageInput:focus {
+        border-color: #0066ff;
+        box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+    }
+    .quick-promo-form {
+        max-width: 600px;
+        margin: 0 auto 30px auto;
+        padding: 32px 28px 24px 28px;
+        background: #18181c;
+        border-radius: 18px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+    .quick-promo-form .form-row {
+        display: flex;
+        gap: 18px;
+        margin-bottom: 0;
+    }
+    .quick-promo-form .form-group {
+        flex: 1;
+        margin-bottom: 18px;
+    }
+    .quick-promo-form label {
+        display: block;
+        margin-bottom: 7px;
+        color: #e0e0e0;
+        font-size: 15px;
+        font-weight: 500;
+    }
+    .quick-promo-form input[type="text"],
+    .quick-promo-form input[type="number"],
+    .quick-promo-form input[type="date"],
+    .quick-promo-form input[type="range"] {
+        width: 100%;
+        padding: 11px 15px;
+        background: #23232a;
+        border: 1.5px solid #23232a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 15px;
+        transition: border 0.2s, box-shadow 0.2s;
+        margin-bottom: 0;
+    }
+    .quick-promo-form input[type="text"]:focus,
+    .quick-promo-form input[type="number"]:focus,
+    .quick-promo-form input[type="date"]:focus,
+    .quick-promo-form input[type="range"]:focus {
+        border-color: #0066ff;
+        box-shadow: 0 0 0 2px rgba(0,102,255,0.10);
+        outline: none;
+    }
+    .quick-promo-form .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+    .quick-promo-form .form-check-input {
+        width: 18px;
+        height: 18px;
+        accent-color: #0066ff;
+    }
+    .quick-promo-form .form-check-label {
+        color: #e0e0e0;
+        font-size: 15px;
+    }
+    .quick-promo-form .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 18px;
+    }
+    .quick-promo-form .btn,
+    .quick-promo-form button[type="submit"] {
+        background: #0066ff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(0,102,255,0.08);
+    }
+    .quick-promo-form .btn:hover,
+    .quick-promo-form button[type="submit"]:hover {
+        background: #0052cc;
+    }
+    .quick-promo-form input[type="range"] {
+        margin-top: 8px;
+    }
+    .quick-promo-form .selected-duration,
+    .quick-promo-form .selected-slots-duration {
+        color: #0066ff;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .form-range-labels span {
+        color: #e0e0e0 !important;
+        background: #23232a;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 15px;
+        font-weight: 500;
+        margin: 0 2px;
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const bulkCreateFormDash = document.getElementById('bulkCreatePromoForm-dash');
+        const bulkCreateFormPage = document.getElementById('bulkCreatePromoForm-page');
+
+        // Handler for MODAL bulk create form
+        if(bulkCreateFormDash) {
+            bulkCreateFormDash.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleBulkCreate(new FormData(bulkCreateFormDash), 'bulk-create-btn-dash', 'bulkCreatePromoForm-dash', 'bulk-result-view-dash', 'generated-codes-textarea-dash');
+            });
+        }
+
+        // Handler for ON-PAGE bulk create form
+        if(bulkCreateFormPage) {
+            bulkCreateFormPage.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleBulkCreate(new FormData(bulkCreateFormPage), null, 'bulkCreatePromoForm-page', 'bulk-result-view-page', 'generated-codes-textarea-page');
+            });
+        }
+
+        function handleBulkCreate(formData, createBtnId, formId, resultViewId, textareaId) {
+            const data = Object.fromEntries(formData.entries());
+            let createBtn;
+            if (createBtnId) {
+                createBtn = document.getElementById(createBtnId);
+                createBtn.disabled = true;
+                createBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...';
+            }
+
+            fetch("{{ url_for('admin_bulk_create_promo_code') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    document.getElementById(formId).style.display = 'none';
+                    document.getElementById(resultViewId).style.display = 'block';
+                    document.getElementById(textareaId).value = result.codes.join('\n');
+                    if (createBtn) createBtn.style.display = 'none';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            })
+            .catch(err => {
+                console.error('Bulk create error:', err);
+                alert('An unexpected error occurred.');
+            })
+            .finally(() => {
+                if (createBtn) {
+                    createBtn.disabled = false;
+                    createBtn.innerHTML = 'Create';
+                }
+            });
+        }
+
+        // Reset bulk create modal on close for Dashboard
+        const bulkCreateModalDash = document.getElementById('bulkCreatePromoModal');
+        if(bulkCreateModalDash) {
+            bulkCreateModalDash.addEventListener('hidden.bs.modal', function () {
+                if (bulkCreateFormDash) {
+                    document.getElementById('bulkCreatePromoForm-dash').style.display = 'block';
+                    document.getElementById('bulk-result-view-dash').style.display = 'none';
+                    document.getElementById('generated-codes-textarea-dash').value = '';
+                    const createBtn = document.getElementById('bulk-create-btn-dash');
+                    if (createBtn) createBtn.style.display = 'inline-block';
+                    bulkCreateFormDash.reset();
+                }
+            });
+        }
+
+        // Copy codes button for Dashboard MODAL
+        const copyBtnDash = document.getElementById('copy-codes-btn-dash');
+        if(copyBtnDash) {
+            copyBtnDash.addEventListener('click', function() {
+                const textarea = document.getElementById('generated-codes-textarea-dash');
+                copyToClipboard(textarea, copyBtnDash);
+            });
+        }
+
+        // Copy codes button for Dashboard PAGE
+        const copyBtnPage = document.getElementById('copy-codes-btn-page');
+        if(copyBtnPage) {
+            copyBtnPage.addEventListener('click', function() {
+                const textarea = document.getElementById('generated-codes-textarea-page');
+                copyToClipboard(textarea, copyBtnPage);
+            });
+        }
+
+        function copyToClipboard(textarea, button) {
+            textarea.select();
+            document.execCommand('copy');
+            const originalText = button.innerHTML;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        }
+
+        // Tab switching functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and panes
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabPanes.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding pane
+                this.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                
+                // Load tab-specific data
+                switch(tabName) {
+                    case 'users':
+                        loadUsers(1);
+                        break;
+                    case 'games':
+                        loadGames(1);
+                        break;
+                    case 'stats':
+                        loadStats('day');
+                        break;
+                    case 'promo':
+                        // Initialize promo code form handlers
+                        initPromoFormHandlers();
+                        break;
+                }
+            });
+        });
+        
+        // Initialize promo form handlers if promo tab is active by default
+        if (document.querySelector('.tab-btn[data-tab="promo"].active')) {
+            initPromoFormHandlers();
+        }
+        
+            function getDurationText(value) {
+                const durations = [
+                    '1 Day', '7 Days', '1 Month', '3 Months', 
+                    '6 Months', '1 Year', 'Permanent'
+                ];
+                return durations[parseInt(value) - 1] || 'Permanent';
+        }
+        
+        // Function to initialize promo form handlers
+        function initPromoFormHandlers() {
+            // --- Handlers for Quick Create Form ---
+            const quickGivesPremiumCheckbox = document.getElementById('quickGivesPremium');
+            const quickPremiumDurationContainer = document.querySelector('.premium-duration-container');
+            const quickPremiumDurationSlider = document.getElementById('quickPremiumDuration');
+            const quickPremiumDurationDisplay = quickPremiumDurationContainer.querySelector('.selected-duration');
+            
+            if (quickGivesPremiumCheckbox) {
+                quickGivesPremiumCheckbox.addEventListener('change', function() {
+                    quickPremiumDurationContainer.style.display = this.checked ? 'block' : 'none';
+                });
+                if (quickPremiumDurationSlider) {
+                    quickPremiumDurationSlider.addEventListener('input', function() {
+                        quickPremiumDurationDisplay.textContent = getDurationText(this.value);
+                    });
+                    quickPremiumDurationDisplay.textContent = getDurationText(quickPremiumDurationSlider.value);
+                }
+            }
+            
+            const quickSlotsInput = document.getElementById('quickSlots');
+            const quickSlotsDurationContainer = document.querySelector('.slots-duration-container');
+            const quickSlotsDurationSlider = document.getElementById('quickSlotsDuration');
+            const quickSlotsDurationDisplay = quickSlotsDurationContainer ? quickSlotsDurationContainer.querySelector('.selected-slots-duration') : null;
+            
+            if (quickSlotsInput) {
+                quickSlotsInput.addEventListener('input', function() {
+                    if (quickSlotsDurationContainer) {
+                        quickSlotsDurationContainer.style.display = this.value > 0 ? 'block' : 'none';
+                    }
+                });
+                if (quickSlotsDurationSlider) {
+                    quickSlotsDurationSlider.addEventListener('input', function() {
+                        if (quickSlotsDurationDisplay) {
+                            quickSlotsDurationDisplay.textContent = getDurationText(this.value);
+                        }
+                    });
+                     if (quickSlotsDurationDisplay) {
+                        quickSlotsDurationDisplay.textContent = getDurationText(quickSlotsDurationSlider.value);
+                    }
+                }
+            }
+
+            // --- Handlers for Bulk Create (On-Page) Form ---
+            const bulkGivesPremiumCheckbox = document.getElementById('bulk_gives_premium-page');
+            const bulkPremiumDurationContainer = document.querySelector('.bulk-premium-duration-container');
+            const bulkPremiumDurationSlider = document.getElementById('bulkPremiumDuration-page');
+            const bulkPremiumDurationDisplay = document.querySelector('.selected-bulk-duration');
+
+            if (bulkGivesPremiumCheckbox) {
+                bulkGivesPremiumCheckbox.addEventListener('change', function() {
+                    if (bulkPremiumDurationContainer) {
+                        bulkPremiumDurationContainer.style.display = this.checked ? 'block' : 'none';
+                    }
+                });
+
+                if (bulkPremiumDurationSlider && bulkPremiumDurationDisplay) {
+                    bulkPremiumDurationSlider.addEventListener('input', function() {
+                        bulkPremiumDurationDisplay.textContent = getDurationText(this.value);
+                    });
+                    bulkPremiumDurationDisplay.textContent = getDurationText(bulkPremiumDurationSlider.value);
+                }
+            }
+
+            const bulkSlotsInput = document.getElementById('bulk_slots-page');
+            const bulkSlotsDurationContainer = document.querySelector('.bulk-slots-duration-container');
+            const bulkSlotsDurationSlider = document.getElementById('bulkSlotsDuration-page');
+            const bulkSlotsDurationDisplay = document.querySelector('.selected-bulk-slots-duration');
+
+            if (bulkSlotsInput) {
+                bulkSlotsInput.addEventListener('input', function() {
+                    if (bulkSlotsDurationContainer) {
+                        bulkSlotsDurationContainer.style.display = this.value > 0 ? 'block' : 'none';
+                    }
+                });
+                
+                if (bulkSlotsDurationSlider && bulkSlotsDurationDisplay) {
+                    bulkSlotsDurationSlider.addEventListener('input', function() {
+                        bulkSlotsDurationDisplay.textContent = getDurationText(this.value);
+                    });
+                    bulkSlotsDurationDisplay.textContent = getDurationText(bulkSlotsDurationSlider.value);
+                }
+            }
+
+            // Group selection handlers for bulk create (page)
+            const bulkGroupSelect = document.getElementById('bulkGroup-page');
+            const bulkCustomGroupContainer = document.querySelector('.bulk-custom-group-container');
+            
+            if (bulkGroupSelect) {
+                bulkGroupSelect.addEventListener('change', function() {
+                    if (bulkCustomGroupContainer) {
+                        bulkCustomGroupContainer.style.display = this.value === 'custom' ? 'block' : 'none';
+                    }
+                });
+            }
+        }
+
+        // Modal functionality
+        const modal = document.getElementById('userModal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const closeModalBtn = document.querySelector('.close-modal');
+        
+        function openModal() {
+            modal.classList.add('active');
+            modalOverlay.classList.add('active');
+        }
+        
+        function closeModal() {
+            modal.classList.remove('active');
+            modalOverlay.classList.remove('active');
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', closeModal);
+        
+        // Message display function
+        function showMessage(message, type = 'error', formId = null) {
+            // Remove any existing message
+            const existingMessages = document.querySelectorAll('.error-message, .success-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.className = type === 'success' ? 'success-message' : 'error-message';
+            messageEl.textContent = message;
+            
+            // Add to form if provided, otherwise add to modal body
+            if (formId && document.getElementById(formId)) {
+                document.getElementById(formId).prepend(messageEl);
+            } else {
+                const modalBody = document.querySelector('.modal-body');
+                if (modalBody) {
+                    modalBody.prepend(messageEl);
+                }
+            }
+            
+            // Auto-remove after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageEl.remove();
+                }, 5000);
+            }
+        }
+        
+        // User Management
+        let usersData = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        async function loadUsers(page) {
+            const loadingRow = `
+                <tr class="loading-placeholder">
+                    <td colspan="5" class="text-center">
+                        <div class="loading-spinner"></div>
+                    </td>
+                </tr>
+            `;
+            document.querySelector('#usersTable tbody').innerHTML = loadingRow;
+            
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const searchQuery = document.getElementById('userSearch').value;
+                const perPage = document.getElementById('perPageInput').value || 10;
+                let apiUrl = `/api/admin/users?page=${page}&per_page=${perPage}`;
+                if (statusFilter !== 'all') {
+                    apiUrl += `&status=${statusFilter}`;
+                }
+                if (searchQuery) {
+                    apiUrl += `&q=${encodeURIComponent(searchQuery)}`;
+                }
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                renderUsers(data);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.querySelector('#usersTable tbody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center">Error loading users. Please try again.</td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function renderUsers(data) {
+            usersData = data.users;
+            currentPage = data.page;
+            totalPages = Math.ceil(data.total / data.perPage);
+            
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+            
+            if (usersData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center">No users found</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            usersData.forEach(user => {
+                const statusClass = user.status.toLowerCase();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td><span class="status ${statusClass}">${user.status}</span></td>
+                    <td>${user.joined}</td>
+                    <td>
+                        <button class="action-btn small edit-user" data-id="${user.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn small delete-user" data-id="${user.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination info
+            document.getElementById('showing-range').textContent = `${(currentPage - 1) * data.perPage + 1}-${Math.min(currentPage * data.perPage, data.total)}`;
+            document.getElementById('total-users').textContent = data.total;
+            document.getElementById('current-page').textContent = currentPage;
+            
+            // Update pagination buttons
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+            
+            // Add event listeners to the edit and delete buttons
+            document.querySelectorAll('.edit-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    showUserDetails(userId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    confirmDeleteUser(userId);
+                });
+            });
+        }
+        
+        function showUserDetails(userId) {
+            const user = usersData.find(u => u.id == userId);
+            if (!user) return;
+            
+            document.getElementById('modalTitle').textContent = `Edit User: ${user.username}`;
+            document.querySelector('.modal-body').innerHTML = `
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" value="${user.username}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" value="${user.email}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="Standard" ${user.status === 'Standard' ? 'selected' : ''}>Standard</option>
+                            <option value="Premium" ${user.status === 'Premium' ? 'selected' : ''}>Premium</option>
+                            <option value="Admin" ${user.status === 'Admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="action-btn" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="action-btn primary" id="saveUserBtn">Save Changes</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('saveUserBtn').addEventListener('click', function() {
+                saveUser(userId);
+            });
+            
+            openModal();
+        }
+        
+        function saveUser(userId) {
+            // Get form values
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status').value;
+            const password = document.getElementById('password') ? document.getElementById('password').value : '';
+            
+            // Validate required fields
+            if (!username || !email) {
+                showGlobalAlert('Username and email are required', 'error');
+                return;
+            }
+            
+            // Prepare data for API
+            const userData = {
+                id: userId,
+                username: username,
+                email: email,
+                status: status
+            };
+            
+            // Add password if provided
+            if (password) {
+                userData.password = password;
+            }
+            
+            // Call API to update user
+            fetch('/api/admin/user/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    loadUsers(currentPage);
+                } else {
+                    showGlobalAlert(data.error || 'Error updating user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user:', error);
+                showGlobalAlert('Error updating user. Please try again.', 'error');
+            });
+        }
+        
+        function confirmDeleteUser(userId) {
+            const user = usersData.find(u => u.id == userId);
+            if (!user) return;
+            
+            document.getElementById('modalTitle').textContent = `Delete User`;
+            document.querySelector('.modal-body').innerHTML = `
+                <div class="confirm-delete">
+                    <p>Are you sure you want to delete user "${user.username}"?</p>
+                    <div class="form-actions">
+                        <button type="button" class="action-btn" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="action-btn danger" id="confirmDeleteBtn">Delete User</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                deleteUser(userId);
+            });
+            
+            openModal();
+        }
+        
+        function deleteUser(userId) {
+            // Get the username from the row
+            const username = document.querySelector(`tr[data-user-id="${userId}"] td:nth-child(1)`).textContent;
+            
+            // Show confirmation dialog
+            showGlobalConfirm(`Are you sure you want to delete user "${username}"?`, function(confirmed) {
+                if (!confirmed) return;
+                
+                // Call API to delete user
+                fetch('/api/admin/user/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: userId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        loadUsers(currentPage);
+                    } else {
+                        showGlobalAlert(data.error || 'Error deleting user', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting user:', error);
+                    showGlobalAlert('Error deleting user. Please try again.', 'error');
+                });
+            });
+        }
+        
+        // Event listeners for pagination
+        document.getElementById('prevPage').addEventListener('click', function() {
+            if (currentPage > 1) {
+                loadUsers(currentPage - 1);
+            }
+        });
+        
+        document.getElementById('nextPage').addEventListener('click', function() {
+            if (currentPage < totalPages) {
+                loadUsers(currentPage + 1);
+            }
+        });
+        
+        // Event listener for user search
+        document.getElementById('userSearch').addEventListener('input', function() {
+            // This would filter users on the server in production
+            // For now, just reload the first page
+            loadUsers(1);
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            // This would filter users on the server in production
+            // For now, just reload the first page
+            loadUsers(1);
+        });
+        
+        document.getElementById('createUserBtn').addEventListener('click', function() {
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            document.querySelector('.modal-body').innerHTML = `
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" />
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="Standard">Standard</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="is_admin"> <span>Admin privileges</span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="action-btn" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="action-btn primary" id="createUserConfirmBtn">Create User</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('createUserConfirmBtn').addEventListener('click', function() {
+                // Get form values
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const status = document.getElementById('status').value;
+                const isAdmin = document.getElementById('is_admin').checked;
+                
+                // Validate required fields
+                if (!username || !email || !password) {
+                    showMessage('Username, email, and password are required', 'error', 'userForm');
+                    return;
+                }
+                
+                // Call API to create user
+                fetch('/api/admin/user/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                        status: status,
+                        is_admin: isAdmin
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        loadUsers(1);
+                    } else {
+                        showMessage(data.error || 'Error creating user', 'error', 'userForm');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating user:', error);
+                    showMessage('Error creating user. Please try again.', 'error', 'userForm');
+                });
+            });
+            
+            openModal();
+        });
+        
+        document.getElementById('perPageInput').addEventListener('change', function() {
+            loadUsers(1);
+        });
+        
+        // Game Management
+        let gamesData = [];
+        let currentGamePage = 1;
+        let totalGamePages = 1;
+        
+        async function loadGames(page) {
+            document.getElementById('gamesGrid').innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+            
+            try {
+                // Get access filter and search query
+                const accessFilter = document.getElementById('accessFilter').value;
+                const searchQuery = document.getElementById('gameSearch').value;
+                
+                // Build API URL with query parameters
+                let apiUrl = `/api/admin/games?page=${page}&per_page=6`;
+                if (accessFilter !== 'all') {
+                    apiUrl += `&access=${accessFilter}`;
+                }
+                if (searchQuery) {
+                    apiUrl += `&q=${encodeURIComponent(searchQuery)}`;
+                }
+                
+                // Call the API
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                renderGames(data);
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesGrid').innerHTML = `
+                    <div class="error-message">Error loading games. Please try again.</div>
+                `;
+            }
+        }
+        
+        function renderGames(data) {
+            gamesData = data.games;
+            currentGamePage = data.page;
+            totalGamePages = Math.ceil(data.total / data.perPage);
+            
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+            
+            if (gamesData.length === 0) {
+                grid.innerHTML = `<div class="no-data">No games found</div>`;
+                return;
+            }
+            
+            gamesData.forEach(game => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                gameCard.innerHTML = `
+                    <img src="${game.image}" alt="${game.title}" class="game-image">
+                    <div class="game-info">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-access ${game.access === 'premium' ? 'premium' : ''}">
+                            ${game.access === 'premium' ? 'Premium' : 'Free'}
+                        </div>
+                    </div>
+                `;
+                
+                gameCard.addEventListener('click', function() {
+                    showGameDetails(game.id);
+                });
+                
+                grid.appendChild(gameCard);
+            });
+            
+            // Update pagination info
+            document.getElementById('showing-games-range').textContent = `${(currentGamePage - 1) * data.perPage + 1}-${Math.min(currentGamePage * data.perPage, data.total)}`;
+            document.getElementById('total-games').textContent = data.total;
+            document.getElementById('current-game-page').textContent = currentGamePage;
+            
+            // Update pagination buttons
+            document.getElementById('prevGamePage').disabled = currentGamePage <= 1;
+            document.getElementById('nextGamePage').disabled = currentGamePage >= totalGamePages;
+        }
+        
+        function showGameDetails(gameId) {
+            const game = gamesData.find(g => g.id == gameId);
+            if (!game) return;
+            
+            document.getElementById('modalTitle').textContent = `Edit Game: ${game.title}`;
+            document.querySelector('.modal-body').innerHTML = `
+                <form id="gameForm">
+                    <div class="form-group">
+                        <label for="gameTitle">Title</label>
+                        <input type="text" id="gameTitle" value="${game.title}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="gameAccess">Access Level</label>
+                        <select id="gameAccess">
+                            <option value="free" ${game.access === 'free' ? 'selected' : ''}>Free</option>
+                            <option value="premium" ${game.access === 'premium' ? 'selected' : ''}>Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="action-btn" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="action-btn primary" id="saveGameBtn">Save Changes</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('saveGameBtn').addEventListener('click', function() {
+                // This would send data to the server in production
+                console.log('Saving game', gameId);
+                closeModal();
+                
+                // Reload games to reflect changes
+                loadGames(currentGamePage);
+            });
+            
+            openModal();
+        }
+        
+        // Event listeners for game pagination
+        document.getElementById('prevGamePage').addEventListener('click', function() {
+            if (currentGamePage > 1) {
+                loadGames(currentGamePage - 1);
+            }
+        });
+        
+        document.getElementById('nextGamePage').addEventListener('click', function() {
+            if (currentGamePage < totalGamePages) {
+                loadGames(currentGamePage + 1);
+            }
+        });
+        
+        // Event listener for game search
+        document.getElementById('gameSearch').addEventListener('input', function() {
+            // This would filter games on the server in production
+            // For now, just reload the first page
+            loadGames(1);
+        });
+        
+        document.getElementById('accessFilter').addEventListener('change', function() {
+            // This would filter games on the server in production
+            // For now, just reload the first page
+            loadGames(1);
+        });
+        
+        // Statistics Chart
+        function loadStats(timeRange) {
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            const selectedTimeRange = timeRange || timeRangeSelect.value;
+            
+            // Show loading state
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+            
+            // Call API to get stats data
+            fetch(`/api/admin/stats?range=${selectedTimeRange}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Restore canvas for chart
+                    chartContainer.innerHTML = `<canvas id="usageChart"></canvas>`;
+                    renderStats(data, selectedTimeRange);
+                })
+                .catch(error => {
+                    console.error('Error loading stats:', error);
+                    chartContainer.innerHTML = `
+                        <div class="error-message">Error loading statistics. Please try again.</div>
+                    `;
+                });
+        }
+        
+        function renderStats(data, timeRange) {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.usageChartInstance) {
+                window.usageChartInstance.destroy();
+            }
+            
+            // Create new chart
+            window.usageChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'User Activity',
+                        data: data.data,
+                        backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                        borderColor: '#0066ff',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointBackgroundColor: '#0066ff',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            border: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            border: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Event listener for time range select
+        document.getElementById('timeRangeSelect').addEventListener('change', function() {
+            loadStats();
+        });
+        
+        // Initialize the dashboard with the default tab
+        loadUsers(1);
+    });
+</script>
+{% endblock %}

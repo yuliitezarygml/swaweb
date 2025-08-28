@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="cryptomus" content="f459cf2d" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SWA V2 - Advanced Utility for Steamtools Integration{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <meta name="cryptomus" content="9ad3c63e" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="page-top">
+    {% include 'navbar.html' %}
+    
+    <div class="container">
+        <!-- Flash message container -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div style="display: none;" data-flash-message="{{ message|escapejs }}" data-flash-type="{{ category }}"></div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Debugging info -->
+        {% if request.args.get('debug') == '1' %}
+        <div class="alert alert-info mt-3" style="font-family: monospace;">
+            Debug: is_admin = {{ is_admin }}<br>
+            Session: {{ session|tojson }}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Process flash messages
+            const flashMessages = document.querySelectorAll('[data-flash-message]');
+            flashMessages.forEach(el => {
+                const message = el.getAttribute('data-flash-message');
+                const messageType = el.getAttribute('data-flash-type') || 'info';
+                if (message) {
+                    showGlobalAlert(message, messageType);
+                }
+            });
+            
+            // Navbar scroll effect with magnetize
+            const navbarWrapper = document.querySelector('.navbar-wrapper');
+            const navbarHeight = navbarWrapper.offsetHeight;
+            const magnetThreshold = navbarHeight * 0.35; // 35% of navbar height
+            let lastKnownScrollY = 0;
+            let ticking = false;
+            let isSnapping = false;
+            let scrollDebounce = null;
+            
+            // Check if device is mobile (max-width: 991px)
+            function isMobile() {
+                return window.innerWidth <= 991;
+            }
+            
+            // Simple debounced scroll handler
+            function handleScrollWithDebounce() {
+                if (scrollDebounce) {
+                    clearTimeout(scrollDebounce);
+                }
+                
+                // Increased debounce delay for smoother animation
+                scrollDebounce = setTimeout(() => {
+                    updateNavbarState();
+                }, 50);
+            }
+            
+            // Simplified magnetize function 
+            function magnetizeToTop() {
+                if (isSnapping || isMobile()) return;
+                isSnapping = true;
+                
+                // Smooth scroll to top
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                
+                // Reset state after animation completes
+                setTimeout(() => {
+                    isSnapping = false;
+                }, 500);
+            }
+            
+            function updateNavbarState() {
+                // Skip all navbar animations for mobile devices
+                if (isMobile()) {
+                    return;
+                }
+                
+                const body = document.body;
+                
+                // Instantly toggle classes based on scroll position
+                if (lastKnownScrollY > 5) {
+                    // Apply scrolled immediately when scrolling down
+                    if (!navbarWrapper.classList.contains('scrolled')) {
+                        navbarWrapper.classList.add('scrolled');
+                        body.classList.remove('page-top');
+                    }
+                } else if (lastKnownScrollY === 0) {
+                    // Remove scrolled immediately when at the top
+                    if (navbarWrapper.classList.contains('scrolled')) {
+                        navbarWrapper.classList.remove('scrolled');
+                        body.classList.add('page-top');
+                    }
+                }
+                
+                // Only magnetize when very close to top and not at zero
+                if (lastKnownScrollY > 0 && lastKnownScrollY < 20) {
+                    magnetizeToTop();
+                }
+            }
+            
+            // Use passive event listener with minimal delay
+            window.addEventListener('scroll', function() {
+                lastKnownScrollY = window.scrollY;
+                
+                // Skip for mobile devices
+                if (isMobile()) return;
+                
+                if (!ticking) {
+                    // Process immediately without debounce
+                    requestAnimationFrame(() => {
+                        updateNavbarState();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }, { passive: true });
+            
+            // Handle window resize to update mobile status
+            window.addEventListener('resize', function() {
+                // If switching from mobile to desktop, reset navbar state
+                if (!isMobile() && lastKnownScrollY === 0) {
+                    navbarWrapper.classList.remove('scrolled');
+                    document.body.classList.add('page-top');
+                }
+            }, { passive: true });
+            
+            // Initialize clipboard for all copy buttons
+            const clipboard = new ClipboardJS('.copy-btn');
+            
+            // Success feedback
+            clipboard.on('success', function(e) {
+                const button = e.trigger;
+                const originalHtml = button.innerHTML;
+                
+                // Visual feedback
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                button.classList.add('copied');
+                
+                // Show global alert
+                showGlobalAlert('Copied to clipboard', 'success');
+                
+                // Reset after animation
+                setTimeout(() => {
+                    button.innerHTML = originalHtml;
+                    button.classList.remove('copied');
+                }, 2000);
+
+                e.clearSelection();
+            });
+
+            // Error feedback
+            clipboard.on('error', function(e) {
+                const button = e.trigger;
+                const originalHtml = button.innerHTML;
+                
+                // Visual feedback for error
+                button.innerHTML = '<i class="fas fa-times"></i>';
+                button.classList.add('copy-error');
+                
+                // Show global alert
+                showGlobalAlert('Failed to copy to clipboard', 'error');
+                
+                // Reset after animation
+                setTimeout(() => {
+                    button.innerHTML = originalHtml;
+                    button.classList.remove('copy-error');
+                }, 2000);
+            });
+            
+            // Initialize with current scroll position and update state
+            lastKnownScrollY = window.scrollY;
+            updateNavbarState();
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+    
+    <!-- Global Alert System -->
+    <script>
+        // Global Alert System - can be called from anywhere in the app
+        function showGlobalAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert-container');
+            existingAlerts.forEach(alert => {
+                if (document.body.contains(alert)) {
+                    document.body.removeChild(alert);
+                }
+            });
+            
+            // Create alert container
+            const alertContainer = document.createElement('div');
+            alertContainer.className = `alert-container ${type}`;
+            
+            // Create alert content
+            const alertContent = document.createElement('div');
+            alertContent.className = 'alert-content';
+            
+            // Add icon based on type
+            const icon = document.createElement('i');
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                icon.className = 'fas fa-exclamation-triangle';
+            } else {
+                icon.className = 'fas fa-info-circle';
+            }
+            
+            // Add message
+            const messageElement = document.createElement('span');
+            messageElement.textContent = message;
+            
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.className = 'alert-close';
+            closeButton.innerHTML = '&times;';
+            closeButton.onclick = function() {
+                if (document.body.contains(alertContainer)) {
+                    document.body.removeChild(alertContainer);
+                }
+            };
+            
+            // Assemble alert
+            alertContent.appendChild(icon);
+            alertContent.appendChild(messageElement);
+            alertContent.appendChild(closeButton);
+            alertContainer.appendChild(alertContent);
+            
+            // Add to body
+            document.body.appendChild(alertContainer);
+            
+            // Animate in
+            setTimeout(() => {
+                alertContainer.classList.add('show');
+            }, 10);
+            
+            // Auto-remove after 4 seconds for success/info
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    if (document.body.contains(alertContainer)) {
+                        alertContainer.classList.remove('show');
+                        setTimeout(() => {
+                            if (document.body.contains(alertContainer)) {
+                                document.body.removeChild(alertContainer);
+                            }
+                        }, 300);
+                    }
+                }, 4000);
+            }
+        }
+        
+        // Global Confirmation System - replacement for native confirm()
+        function showGlobalConfirm(message, callback, confirmText = 'Confirm', cancelText = 'Cancel') {
+            // Remove any existing confirmations
+            const existingConfirms = document.querySelectorAll('.confirm-container');
+            existingConfirms.forEach(confirm => {
+                if (document.body.contains(confirm)) {
+                    document.body.removeChild(confirm);
+                }
+            });
+            
+            // Create backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'confirm-backdrop';
+            
+            // Create confirm container
+            const confirmContainer = document.createElement('div');
+            confirmContainer.className = 'confirm-container';
+            
+            // Create confirm content
+            const confirmContent = document.createElement('div');
+            confirmContent.className = 'confirm-content';
+            
+            // Add title with icon
+            const titleContainer = document.createElement('div');
+            titleContainer.className = 'confirm-title';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-question-circle';
+            const title = document.createElement('h4');
+            title.textContent = 'Confirmation';
+            titleContainer.appendChild(icon);
+            titleContainer.appendChild(title);
+            
+            // Add message
+            const messageElement = document.createElement('div');
+            messageElement.className = 'confirm-message';
+            messageElement.textContent = message;
+            
+            // Add buttons container
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'confirm-buttons';
+            
+            // Add cancel button
+            const cancelButton = document.createElement('button');
+            cancelButton.className = 'confirm-button cancel';
+            cancelButton.textContent = cancelText;
+            cancelButton.onclick = function() {
+                // Remove confirmation dialog
+                document.body.removeChild(confirmContainer);
+                document.body.removeChild(backdrop);
+                // Call callback with false
+                if (typeof callback === 'function') {
+                    callback(false);
+                }
+            };
+            
+            // Add confirm button
+            const confirmButton = document.createElement('button');
+            confirmButton.className = 'confirm-button confirm';
+            confirmButton.textContent = confirmText;
+            confirmButton.onclick = function() {
+                // Remove confirmation dialog
+                document.body.removeChild(confirmContainer);
+                document.body.removeChild(backdrop);
+                // Call callback with true
+                if (typeof callback === 'function') {
+                    callback(true);
+                }
+            };
+            
+            // Assemble confirmation dialog
+            buttonsContainer.appendChild(cancelButton);
+            buttonsContainer.appendChild(confirmButton);
+            confirmContent.appendChild(titleContainer);
+            confirmContent.appendChild(messageElement);
+            confirmContent.appendChild(buttonsContainer);
+            confirmContainer.appendChild(confirmContent);
+            
+            // Add to body
+            document.body.appendChild(backdrop);
+            document.body.appendChild(confirmContainer);
+            
+            // Animate in
+            setTimeout(() => {
+                backdrop.classList.add('show');
+                confirmContainer.classList.add('show');
+                confirmButton.focus();
+            }, 10);
+        }
+    </script>
+    
+    <style>
+        /* Global Alert Styles */
+        .alert-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #212330;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            min-width: 280px;
+            max-width: 400px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            opacity: 0.95;
+            backdrop-filter: blur(8px);
+        }
+        
+        .alert-container.show {
+            transform: translateX(0);
+        }
+        
+        .alert-container.success {
+            border-left: 5px solid #0066ff;
+        }
+        
+        .alert-container.error {
+            border-left: 5px solid #ff3333;
+        }
+        
+        .alert-container.warning {
+            border-left: 5px solid #ff9900;
+        }
+        
+        .alert-container.info {
+            border-left: 5px solid #00b3ff;
+        }
+        
+        .alert-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-content i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .alert-content .fa-check-circle {
+            color: #0066ff;
+        }
+        
+        .alert-content .fa-exclamation-circle {
+            color: #ff3333;
+        }
+        
+        .alert-content .fa-exclamation-triangle {
+            color: #ff9900;
+        }
+        
+        .alert-content .fa-info-circle {
+            color: #00b3ff;
+        }
+        
+        .alert-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 0 0 10px;
+        }
+        
+        .alert-close:hover {
+            color: white;
+        }
+        
+        /* Global Confirm Dialog Styles */
+        .confirm-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .confirm-backdrop.show {
+            opacity: 1;
+        }
+        
+        .confirm-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: #212330;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 450px;
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .confirm-container.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .confirm-content {
+            padding: 20px;
+        }
+        
+        .confirm-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .confirm-title i {
+            color: #0066ff;
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .confirm-title h4 {
+            margin: 0;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .confirm-message {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .confirm-button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .confirm-button.cancel {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .confirm-button.cancel:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .confirm-button.confirm {
+            background-color: #0066ff;
+            color: white;
+        }
+        
+        .confirm-button.confirm:hover {
+            background-color: #0055dd;
+        }
+    </style>
+</body>
+</html> 

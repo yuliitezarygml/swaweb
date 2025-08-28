@@ -1,0 +1,676 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Promo Codes | Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .promo-group {
+        border: 1px solid #3c4049;
+        border-radius: .25rem;
+        overflow: hidden;
+    }
+    .promo-group-header {
+        background-color: #2a2d35;
+        padding: 0.75rem 1.25rem;
+        user-select: none;
+        color: #e9ecef;
+    }
+    .promo-group-header:hover {
+        background-color: #3c4049;
+    }
+    .promo-group-header .fas {
+        transition: transform 0.2s ease-in-out;
+    }
+    .promo-group-header.collapsed .fas {
+        transform: rotate(-90deg);
+    }
+    .promo-group-content {
+        padding: 0;
+        background-color: #212529;
+    }
+    .promo-group-content .table {
+        margin-bottom: 0;
+    }
+    .table-dark-custom {
+        color: #fff;
+        background-color: #343a40;
+    }
+    .table-dark-custom th {
+        border-color: #454d55;
+    }
+    .badge.bg-expired { background-color: #6c757d; }
+    .badge.bg-used { background-color: #dc3545; }
+    .badge.bg-active { background-color: #28a745; }
+
+    /* View Modal Styles */
+    #viewPromoModal .modal-content {
+        background-color: #2a2d35;
+        color: #e9ecef;
+        border: 1px solid #495057;
+    }
+    #viewPromoModal .modal-header,
+    #viewPromoModal .modal-footer {
+        border-color: #495057;
+    }
+    #viewPromoModal .btn-close {
+        filter: invert(1) brightness(2);
+    }
+    #viewPromoModal .promo-code-display {
+        background-color: #212529 !important;
+        border: 1px solid #495057;
+        padding: 1rem !important;
+    }
+     #viewPromoModal #promoDetails hr {
+        border-color: #495057;
+    }
+    #viewPromoModal #promoDetails dt {
+        color: #adb5bd;
+    }
+    #viewPromoModal #promoDetails dd {
+        font-weight: 500;
+    }
+    #viewPromoModal .text-muted {
+        color: #e9ecef !important;
+    }
+
+    /* Fix text color in Create/Bulk Modals */
+    #createPromoModal .modal-content,
+    #bulkCreatePromoModal .modal-content {
+        color: #212529; /* Black text */
+    }
+    #createPromoModal .form-check-label,
+    #bulkCreatePromoModal .form-check-label {
+        color: #212529; /* Ensure checkbox labels are also black */
+    }
+    
+    /* Fix alert message text color */
+    .alert-success {
+        color: #ffffff !important;
+        background-color: #28a745;
+        border-color: #23923d;
+    }
+    .alert-warning {
+        color: #ffffff !important;
+        background-color: #ffc107;
+        border-color: #d39e00;
+    }
+    .alert-danger {
+        color: #ffffff !important;
+        background-color: #dc3545;
+        border-color: #c82333;
+    }
+    .alert-info {
+        color: #ffffff !important;
+        background-color: #17a2b8;
+        border-color: #138496;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid admin-container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Promo Code Management</h5>
+                        <div class="btn-group">
+                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPromoModal"><i class="fas fa-plus"></i> Create Promo Code</button>
+                             <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#bulkCreatePromoModal"><i class="fas fa-layer-group"></i> Bulk Create</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    {% if promo_codes %}
+                        {% for group, codes in promo_codes|groupby('group') %}
+                        {% set codes = codes|list %}
+                        <div class="promo-group mb-3">
+                            <div class="promo-group-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center flex-grow-1 toggle-area" data-bs-toggle="collapse" data-bs-target="#group-content-{{ group }}">
+                                    <i class="fas fa-chevron-right me-2"></i>
+                                    <h6 class="mb-0 fw-bold">{{ group|get_group_display_name }}</h6>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-pill me-3">{{ codes|length }} codes</span>
+                                    <button class="btn btn-sm btn-outline-danger delete-used-group-btn me-2" data-group-name="{{ group }}" data-group-count="{{ codes|length }}" title="Delete Used Codes">
+                                        <i class="fas fa-trash-alt"></i> Used
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-all-group-btn" data-group-name="{{ group }}" data-group-count="{{ codes|length }}" title="Delete All Codes">
+                                        <i class="fas fa-trash-alt"></i> All
+                                    </button>
+                                    <form action="{{ url_for('admin_delete_promo_group') }}" method="post" class="d-none" id="delete-group-form-{{ group }}">
+                                        <input type="hidden" name="group_name" value="{{ group }}">
+                                        <input type="hidden" name="delete_type" id="delete-type-{{ group }}" value="used_only">
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="promo-group-content collapse" id="group-content-{{ group }}">
+                    <div class="table-responsive">
+                                    <table class="table table-dark table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                                <th>Uses</th>
+                                    <th>Expires</th>
+                                                <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                            {% for promo in codes %}
+                                    <tr>
+                                        <td><code>{{ promo.code }}</code></td>
+                                        <td>{{ promo.description }}</td>
+                                                <td>{{ promo.uses_count }} / {{ promo.uses_limit if promo.uses_limit > 0 else '∞' }}</td>
+                                                <td>
+                                    {% if promo.expires_at %}
+                                        {{ promo.expires_at.strftime('%d.%m.%Y %H:%M') }}
+                                    {% else %}
+                                        Never 
+                                        {% if promo.gives_premium %}
+                                            {% if promo.premium_duration == '1' %}
+                                                (Premium: 1 день)
+                                            {% elif promo.premium_duration == '2' %}
+                                                (Premium: 7 дней)
+                                            {% elif promo.premium_duration == '3' %}
+                                                (Premium: 30 дней)
+                                            {% elif promo.premium_duration == '4' %}
+                                                (Premium: 90 дней)
+                                            {% elif promo.premium_duration == '5' %}
+                                                (Premium: 180 дней)
+                                            {% elif promo.premium_duration == '6' %}
+                                                (Premium: 365 дней)
+                                            {% elif promo.premium_duration == '7' %}
+                                                (Premium: Бессрочно)
+                                            {% else %}
+                                                (Premium: {{ promo.premium_duration }} дн.)
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if promo.slots and promo.slots|int > 0 %}
+                                            {% if promo.slots_duration == '1' %}
+                                                (Slots: 1 день)
+                                            {% elif promo.slots_duration == '2' %}
+                                                (Slots: 7 дней)
+                                            {% elif promo.slots_duration == '3' %}
+                                                (Slots: 30 дней)
+                                            {% elif promo.slots_duration == '4' %}
+                                                (Slots: 90 дней)
+                                            {% elif promo.slots_duration == '5' %}
+                                                (Slots: 180 дней)
+                                            {% elif promo.slots_duration == '6' %}
+                                                (Slots: 365 дней)
+                                            {% elif promo.slots_duration == '7' %}
+                                                (Slots: Бессрочно)
+                                            {% else %}
+                                                (Slots: {{ promo.slots_duration }} дн.)
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                        <td>
+                                                    {% set is_expired = promo.expires_at and promo.expires_at < now() %}
+                                                    {% set is_used_up = promo.uses_limit > 0 and promo.uses_count >= promo.uses_limit %}
+                                                    {% if is_used_up %}
+                                                        <span class="badge bg-used">Used Up</span>
+                                                    {% elif is_expired %}
+                                                        <span class="badge bg-expired">Expired</span>
+                                            {% else %}
+                                                        <span class="badge bg-active">Active</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                                    <button class="btn btn-sm btn-info view-promo-btn" data-id="{{ promo.id }}" data-code="{{ promo.code }}" data-bs-toggle="modal" data-bs-target="#viewPromoModal"><i class="fas fa-eye"></i></button>
+                                                    <button class="btn btn-sm btn-danger delete-promo-btn" data-id="{{ promo.id }}" data-code="{{ promo.code }}"><i class="fas fa-trash"></i></button>
+                                                    <form action="{{ url_for('admin_delete_promo_code') }}" method="post" class="d-none" id="delete-form-{{ promo.id }}">
+                                                <input type="hidden" name="promo_id" value="{{ promo.id }}">
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center">No promo codes found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Promo Modal -->
+<div class="modal fade" id="createPromoModal" tabindex="-1" aria-labelledby="createPromoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPromoModalLabel">Create Promo Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('admin_create_promo_code') }}" method="post" id="createPromoForm">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="group-create" class="form-label">Group</label>
+                        <select id="group-create" name="group" class="form-select">
+                            <option value="default">Default</option>
+                            <option value="vip">1 Month Premium Stock</option>
+                            <option value="special">6 Month Premium Stock</option>
+                            <option value="seasonal">Lifetime Premium Stock</option>
+                            <option value="partner">1 Month Slots Stock</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 custom-group-container-create" style="display:none;">
+                        <label for="custom_group_create" class="form-label">Custom Group Name</label>
+                        <input type="text" id="custom_group_create" name="custom_group" class="form-control" placeholder="Enter custom group name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="uses_limit" class="form-label">Usage Limit (0 = unlimited)</label>
+                        <input type="number" class="form-control" id="uses_limit" name="uses_limit" value="1" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="expires_at" class="form-label">Expiration Date (leave empty for unlimited)</label>
+                        <input type="date" class="form-control" id="expires_at" name="expires_at">
+                    </div>
+                    <div class="mb-3">
+                        <label for="expires_time" class="form-label">Expiration Time (optional)</label>
+                        <input type="time" class="form-control" id="expires_time" name="expires_time" value="23:59">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="gives_premium" name="gives_premium">
+                        <label class="form-check-label" for="gives_premium">Grants premium status</label>
+                    </div>
+                    <div class="mb-3 premium-options" style="display:none;">
+                        <label for="premium_duration" class="form-label">Premium Duration (days)</label>
+                        <select class="form-select" id="premium_duration" name="premium_duration">
+                            <option value="1">1 день</option>
+                            <option value="2">7 дней</option>
+                            <option value="3" selected>30 дней</option>
+                            <option value="4">90 дней</option>
+                            <option value="5">180 дней</option>
+                            <option value="6">365 дней</option>
+                            <option value="7">Бессрочно</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="slots" class="form-label">Number of Slots (0 = none)</label>
+                        <input type="number" class="form-control" id="slots" name="slots" value="0" min="0">
+                    </div>
+                    <div class="mb-3 slots-options" style="display:none;">
+                        <label for="slots_duration" class="form-label">Slots Duration (days)</label>
+                        <select class="form-select" id="slots_duration" name="slots_duration">
+                            <option value="1">1 день</option>
+                            <option value="2">7 дней</option>
+                            <option value="3" selected>30 дней</option>
+                            <option value="4">90 дней</option>
+                            <option value="5">180 дней</option>
+                            <option value="6">365 дней</option>
+                            <option value="7">Бессрочно</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="createPromoForm" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Create Promo Modal -->
+<div class="modal fade" id="bulkCreatePromoModal" tabindex="-1" aria-labelledby="bulkCreatePromoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkCreatePromoModalLabel">Bulk Create Promo Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                 <div id="bulk-result-view" style="display: none;">
+                    <h5>Generated Codes:</h5>
+                    <textarea id="generated-codes-textarea" class="form-control" rows="8" readonly></textarea>
+                    <button id="copy-codes-btn" class="btn btn-success mt-2"><i class="fas fa-copy"></i> Copy Codes</button>
+                </div>
+                <form id="bulkCreatePromoForm" style="display: block;">
+                    <div class="mb-3">
+                        <label for="bulk_count" class="form-label">Number of Codes (max 100)</label>
+                        <input type="number" class="form-control" id="bulk_count" name="count" value="10" min="1" max="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="bulk_description" name="description" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="group-bulk" class="form-label">Group</label>
+                        <select id="group-bulk" name="group" class="form-select">
+                            <<option value="default">Default</option>
+                            <option value="vip">1 Month Premium Stock</option>
+                            <option value="special">6 Month Premium Stock</option>
+                            <option value="seasonal">Lifetime Premium Stock</option>
+                            <option value="partner">1 Month Slots Stock</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 custom-group-container-bulk" style="display:none;">
+                        <label for="custom_group_bulk" class="form-label">Custom Group Name</label>
+                        <input type="text" id="custom_group_bulk" name="custom_group" class="form-control" placeholder="Enter custom group name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_uses_limit" class="form-label">Usage Limit (0 = unlimited)</label>
+                        <input type="number" class="form-control" id="bulk_uses_limit" name="uses_limit" value="1" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_expires_at" class="form-label">Expiration Date (leave empty for unlimited)</label>
+                        <input type="date" class="form-control" id="bulk_expires_at" name="expires_at">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_expires_time" class="form-label">Expiration Time (optional)</label>
+                        <input type="time" class="form-control" id="bulk_expires_time" name="expires_time" value="23:59">
+                    </div>
+                     <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="bulk_gives_premium" name="gives_premium">
+                        <label class="form-check-label" for="bulk_gives_premium">Grants premium status</label>
+                    </div>
+                    <div class="mb-3 bulk-premium-options" style="display:none;">
+                        <label for="bulk_premium_duration" class="form-label">Premium Duration (days)</label>
+                        <select class="form-select" id="bulk_premium_duration" name="premium_duration">
+                            <option value="1">1 день</option>
+                            <option value="2">7 дней</option>
+                            <option value="3" selected>30 дней</option>
+                            <option value="4">90 дней</option>
+                            <option value="5">180 дней</option>
+                            <option value="6">365 дней</option>
+                            <option value="7">Бессрочно</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_slots" class="form-label">Number of Slots (0 = none)</label>
+                        <input type="number" class="form-control" id="bulk_slots" name="slots" value="0" min="0">
+                    </div>
+                    <div class="mb-3 bulk-slots-options" style="display:none;">
+                        <label for="bulk_slots_duration" class="form-label">Slots Duration (days)</label>
+                        <select class="form-select" id="bulk_slots_duration" name="slots_duration">
+                            <option value="1">1 день</option>
+                            <option value="2">7 дней</option>
+                            <option value="3" selected>30 дней</option>
+                            <option value="4">90 дней</option>
+                            <option value="5">180 дней</option>
+                            <option value="6">365 дней</option>
+                            <option value="7">Бессрочно</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" id="bulk-modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="bulkCreatePromoForm" class="btn btn-primary" id="bulk-create-btn">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Promo Modal -->
+<div class="modal fade" id="viewPromoModal" tabindex="-1" aria-labelledby="viewPromoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewPromoModalLabel">Promo Code Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="promo-code-display p-3 rounded bg-light text-center">
+                        <h4 class="mb-0" id="viewPromoCode"></h4>
+                    </div>
+                </div>
+                <div id="promoDetails"><p>Loading information...</p></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Group collapsing logic
+    document.querySelectorAll('.toggle-area').forEach(button => {
+        button.addEventListener('click', function() {
+            this.parentElement.parentElement.classList.toggle('collapsed');
+        });
+    });
+
+    // Delete used codes in group
+    document.querySelectorAll('.delete-used-group-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const groupName = this.dataset.groupName;
+            const groupCount = this.dataset.groupCount;
+            
+            if (confirm(`Вы уверены, что хотите удалить ИСПОЛЬЗОВАННЫЕ промокоды из группы "${groupName}"? Это действие нельзя отменить.`)) {
+                document.getElementById(`delete-type-${groupName}`).value = 'used_only';
+                document.getElementById(`delete-group-form-${groupName}`).submit();
+            }
+        });
+    });
+
+    // Delete all codes in group
+    document.querySelectorAll('.delete-all-group-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const groupName = this.dataset.groupName;
+            const groupCount = this.dataset.groupCount;
+            
+            if (confirm(`Вы уверены, что хотите удалить ВСЮ группу "${groupName}" и все ${groupCount} её промокоды? Это действие нельзя отменить.`)) {
+                document.getElementById(`delete-type-${groupName}`).value = 'all';
+                document.getElementById(`delete-group-form-${groupName}`).submit();
+            }
+        });
+    });
+
+    // Delete promo code confirmation
+    document.querySelectorAll('.delete-promo-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const promoId = this.dataset.id;
+            const promoCode = this.dataset.code;
+            if (confirm(`Are you sure you want to delete the promo code "${promoCode}"?`)) {
+                document.getElementById(`delete-form-${promoId}`).submit();
+            }
+        });
+    });
+                
+    // View promo code details
+    document.querySelectorAll('.view-promo-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const promoId = this.dataset.id;
+            const promoCode = this.dataset.code;
+                document.getElementById('viewPromoCode').textContent = promoCode;
+            const detailsContainer = document.getElementById('promoDetails');
+            detailsContainer.innerHTML = '<p>Loading...</p>';
+                
+                fetch(`/api/admin/promo-codes/${promoId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const promo = data.promo;
+                        detailsContainer.innerHTML = `
+                            <dl class="row">
+                                <dt class="col-sm-4">Description</dt>
+                                <dd class="col-sm-8">${promo.description || 'N/A'}</dd>
+
+                                <dt class="col-sm-4">Group</dt>
+                                <dd class="col-sm-8">${getGroupDisplayName(promo.group || 'default')}</dd>
+
+                                <dt class="col-sm-4">Usage</dt>
+                                <dd class="col-sm-8">${promo.uses_count || 0} / ${promo.uses_limit > 0 ? promo.uses_limit : '∞'}</dd>
+
+                                <dt class="col-sm-4">Expires</dt>
+                                <dd class="col-sm-8">${promo.expires_at ? new Date(promo.expires_at).toLocaleString('ru-RU', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'Never' + 
+                                    (promo.gives_premium ? ' (Premium: ' + getPremiumDurationText(promo.premium_duration) + ')' : '') + 
+                                    (promo.slots > 0 ? ' (Slots: ' + getPremiumDurationText(promo.slots_duration) + ')' : '')}</dd>
+
+                                <dt class="col-sm-4">Grants Premium</dt>
+                                <dd class="col-sm-8">${promo.gives_premium ? 'Yes' : 'No'}</dd>
+
+                                <dt class="col-sm-4">Slots</dt>
+                                <dd class="col-sm-8">${promo.slots || 0}</dd>
+                            </dl>
+                            <hr>
+                            <h6>Redeemed By:</h6>
+                            ${promo.redeemed_by && promo.redeemed_by.length > 0
+                                ? `<ul class="list-unstyled mb-0">${promo.redeemed_by.map(u => `<li>${u.username} on ${new Date(u.redeemed_at).toLocaleString()}</li>`).join('')}</ul>`
+                                : '<p class="text-muted small mb-0">Not used by anyone yet.</p>'
+                            }
+                        `;
+                        } else {
+                        detailsContainer.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                    console.error('Error fetching promo details:', error);
+                    detailsContainer.innerHTML = '<div class="alert alert-danger">An error occurred while fetching details.</div>';
+                    });
+            });
+        });
+        
+    // Bulk Create Modal Logic
+    const bulkCreateForm = document.getElementById('bulkCreatePromoForm');
+    if (bulkCreateForm) {
+        bulkCreateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(bulkCreateForm);
+            const data = Object.fromEntries(formData.entries());
+            const createBtn = document.getElementById('bulk-create-btn');
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+
+            fetch("{{ url_for('admin_bulk_create_promo_code') }}", {
+                        method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+                    })
+                    .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    document.getElementById('bulkCreatePromoForm').style.display = 'none';
+                    document.getElementById('bulk-result-view').style.display = 'block';
+                    document.getElementById('generated-codes-textarea').value = result.codes.join('\\n');
+                    document.getElementById('bulk-create-btn').style.display = 'none';
+                        } else {
+                    alert('Error: ' + result.error);
+                }
+            })
+            .finally(() => {
+                createBtn.disabled = false;
+                createBtn.innerHTML = 'Create';
+            });
+        });
+    }
+
+    const bulkCreateModal = document.getElementById('bulkCreatePromoModal');
+    if (bulkCreateModal) {
+        bulkCreateModal.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('bulkCreatePromoForm').style.display = 'block';
+            document.getElementById('bulk-result-view').style.display = 'none';
+            document.getElementById('generated-codes-textarea').value = '';
+            document.getElementById('bulk-create-btn').style.display = 'inline-block';
+            bulkCreateForm.reset();
+        });
+    }
+
+    const copyBtn = document.getElementById('copy-codes-btn');
+    if(copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const textarea = document.getElementById('generated-codes-textarea');
+            textarea.select();
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Codes'; }, 2000);
+        });
+    }
+
+    // Handle custom group input display
+    function setupGroupSelect(selectId, containerClass) {
+        const groupSelect = document.getElementById(selectId);
+        const customGroupContainer = document.querySelector(containerClass);
+        if (groupSelect && customGroupContainer) {
+            groupSelect.addEventListener('change', function() {
+                customGroupContainer.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+    }
+    setupGroupSelect('group-create', '.custom-group-container-create');
+    setupGroupSelect('group-bulk', '.custom-group-container-bulk');
+
+    // Toggle premium options based on checkbox
+    document.getElementById('gives_premium').addEventListener('change', function() {
+        document.querySelector('.premium-options').style.display = this.checked ? 'block' : 'none';
+    });
+    document.getElementById('bulk_gives_premium').addEventListener('change', function() {
+        document.querySelector('.bulk-premium-options').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Initialize premium options visibility
+    document.querySelector('.premium-options').style.display = document.getElementById('gives_premium').checked ? 'block' : 'none';
+    document.querySelector('.bulk-premium-options').style.display = document.getElementById('bulk_gives_premium').checked ? 'block' : 'none';
+    
+    // Toggle slots options based on slots value
+    document.getElementById('slots').addEventListener('input', function() {
+        document.querySelector('.slots-options').style.display = parseInt(this.value) > 0 ? 'block' : 'none';
+    });
+    document.getElementById('bulk_slots').addEventListener('input', function() {
+        document.querySelector('.bulk-slots-options').style.display = parseInt(this.value) > 0 ? 'block' : 'none';
+    });
+    
+    // Initialize slots options visibility
+    document.querySelector('.slots-options').style.display = parseInt(document.getElementById('slots').value) > 0 ? 'block' : 'none';
+    document.querySelector('.bulk-slots-options').style.display = parseInt(document.getElementById('bulk_slots').value) > 0 ? 'block' : 'none';
+
+    function getGroupDisplayName(groupName) {
+        const displayNames = {
+            'default': 'Default',
+            'vip': '1 Month Premium Stock',
+            'special': '6 Month Premium Stock',
+            'seasonal': 'Lifetime Premium Stock',
+            'partner': '1 Month Slots Stock',
+            'custom': 'Custom'
+        };
+        return displayNames[groupName] || groupName;
+    }
+    
+    function getPremiumDurationText(duration) {
+        const durations = {
+            '1': '1 день',
+            '2': '7 дней',
+            '3': '30 дней',
+            '4': '90 дней',
+            '5': '180 дней',
+            '6': '365 дней',
+            '7': 'Бессрочно'
+        };
+        return durations[duration] || duration + ' дн.';
+    }
+});
+</script>
+{% endblock %} 
