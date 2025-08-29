@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: swa_webapp
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=your-secret-key-change-in-production
+      - MONGODB_URI=mongodb://mongodb:27017/swa_database
+      - FLASK_ENV=production
+    depends_on:
+      - mongodb
+    volumes:
+      - ./static:/app/static
+    networks:
+      - swa_network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: swa_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=swa_database
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb-init:/docker-entrypoint-initdb.d
+    networks:
+      - swa_network
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: swa_mongo_express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongodb
+    networks:
+      - swa_network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  swa_network:
+    driver: bridge

@@ -14,9 +14,27 @@ from functools import wraps
 import random
 import string
 import sys
+import logging
+
+# MongoDB imports - REQUIRED (no fallback to JSON)
+from mongo.connection import mongo_db
+from mongo.operations.user_ops import user_ops
+from mongo.operations.promo_ops import promo_ops
+from mongo.operations.game_ops import game_ops
+from mongo.operations.session_ops import session_ops
+from mongo.operations.device_ops import device_ops
+from mongo.models.user import User
+from mongo.models.promo_code import PromoCode
+from mongo.models.game import Game
+from mongo.models.session import Session
+from mongo.models.device import Device
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'swa-dev-secret-key-change-in-prod')
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define custom Jinja2 filters
 @app.template_filter('escapejs')
@@ -39,11 +57,7 @@ def to_datetime_filter(value):
         except (ValueError, TypeError):
             return None
 
-# User data file
-USERS_FILE = 'users.json'
-
-# Promo codes file
-PROMO_CODES_FILE = 'promo_codes.json'
+# MongoDB-only configuration (JSON files removed)
 
 # Cache data structures
 data_cache = {
@@ -96,22 +110,18 @@ GAMES_CACHE_LIFETIME = 3600  # 1 hour
 
 # Helper functions for promo codes
 def get_promo_codes():
-    """Load promo codes from JSON file"""
-    if not os.path.exists(PROMO_CODES_FILE):
-        with open(PROMO_CODES_FILE, 'w') as f:
-            json.dump([], f)
-        return []
-        
+    """Load promo codes from MongoDB"""
     try:
-        with open(PROMO_CODES_FILE, 'r') as f:
-            return json.load(f)
-    except (json.JSONDecodeError, FileNotFoundError):
-        return []
+        promos = promo_ops.get_all_promo_codes()
+        return [promo.to_dict() for promo in promos]
+    except Exception as e:
+        logger.error(f"MongoDB error: {e}")
+        raise Exception(f"Cannot access MongoDB: {e}")
 
 def save_promo_codes(promo_codes):
-    """Save promo codes to JSON file"""
-    with open(PROMO_CODES_FILE, 'w') as f:
-        json.dump(promo_codes, f, indent=4)
+    """MongoDB saves automatically - this function is kept for compatibility"""
+    logger.info("MongoDB saves automatically - no manual save needed")
+    return True
 
 def generate_promo_code(length=14):
     """Generate a random promo code"""
@@ -128,17 +138,13 @@ def find_promo_code(code):
 
 # Helper functions for user authentication
 def get_users():
-    """Load users from JSON file"""
-    if not os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'w') as f:
-            json.dump([], f)
-        return []
-        
+    """Load users from MongoDB"""
     try:
-        with open(USERS_FILE, 'r') as f:
-            return json.load(f)
-    except (json.JSONDecodeError, FileNotFoundError):
-        return []
+        users = user_ops.get_all_users()
+        return [user.to_dict() for user in users]
+    except Exception as e:
+        logger.error(f"MongoDB error: {e}")
+        raise Exception(f"Cannot access MongoDB: {e}")
 
 def has_valid_premium(user):
     """Check if a user has valid premium status"""
@@ -169,32 +175,9 @@ def is_admin(user):
     return user.get('is_admin', False)
 
 def save_users(users):
-    """Save users to JSON file with error handling and atomic writes"""
-    import tempfile
-    import shutil
-    
-    try:
-        # Create temporary file in same directory
-        temp_file = USERS_FILE + '.tmp'
-        
-        # Write to temporary file first
-        with open(temp_file, 'w', encoding='utf-8') as f:
-            json.dump(users, f, indent=4, ensure_ascii=False)
-        
-        # Atomic replace - only if write was successful
-        shutil.move(temp_file, USERS_FILE)
-        
-    except Exception as e:
-        # Clean up temp file if it exists
-        if os.path.exists(temp_file):
-            try:
-                os.remove(temp_file)
-            except:
-                pass
-        
-        # Log error and re-raise
-        print(f"Error saving users: {e}")
-        raise
+    """MongoDB saves automatically - this function is kept for compatibility"""
+    logger.info("MongoDB saves automatically - no manual save needed")
+    return True
 
 def hash_password(password):
     """Hash a password for storing"""
@@ -210,28 +193,31 @@ def find_user_by_username(username):
     """Find a user by username"""
     if username is None:
         return None
-        
-    users = get_users()
-    for user in users:
-        if user['username'].lower() == username.lower():
-            return user
-    return None
+    
+    try:
+        user = user_ops.get_user_by_username(username)
+        return user.to_dict() if user else None
+    except Exception as e:
+        logger.error(f"MongoDB error: {e}")
+        raise Exception(f"Cannot access MongoDB: {e}")
 
 def find_user_by_email(email):
     """Find a user by email"""
-    users = get_users()
-    for user in users:
-        if user['email'].lower() == email.lower():
-            return user
-    return None
+    try:
+        user = user_ops.get_user_by_email(email)
+        return user.to_dict() if user else None
+    except Exception as e:
+        logger.error(f"MongoDB error: {e}")
+        raise Exception(f"Cannot access MongoDB: {e}")
 
 def find_user_by_id(user_id):
     """Find a user by id"""
-    users = get_users()
-    for user in users:
-        if user['id'] == user_id:
-            return user
-    return None
+    try:
+        user = user_ops.get_user_by_id(user_id)
+        return user.to_dict() if user else None
+    except Exception as e:
+        logger.error(f"MongoDB error: {e}")
+        raise Exception(f"Cannot access MongoDB: {e}")
 
 def is_valid_username(username):
     """Check if username is valid"""
@@ -297,11 +283,12 @@ def generate_unique_id(user_id):
 
 def find_user_by_launcher_code(code):
     """Find a user by their launcher connection code"""
-    users = get_users()
-    for user in users:
-        if user.get('launcher_code') == code:
-            return user
-    return None
+    try:
+        user = user_ops.get_user_by_launcher_code(code)
+        return user.to_dict() if user else None
+    except Exception as e:
+        logger.error(f"Error finding user by launcher_code: {e}")
+        return None
 
 def add_or_update_device(user_id, device_id, device_name, device_os):
     """Add or update a device for a user"""
@@ -432,36 +419,39 @@ def register():
         # Generate user ID
         user_id = str(uuid.uuid4())
         
-        # Create new user - without launcher code for Standard users
-        new_user = {
-            'id': user_id,
-            'username': username,
-            'email': email,
-            'password': hash_password(password),
-            'join_date': datetime.now().strftime('%Y-%m-%d'),
-            'status': 'Standard',
-            'games_count': 0,
-            'is_admin': False,
-            'launcher_connected': False,
-            'last_connection': None,
-            'unique_id': generate_unique_id(user_id),
-            'total_play_time': '0h 0m',
-            'games_played': 0,
-            'achievements': 0,
-            'last_session': None,
-            'game_sessions': [],
-            'slots': 0,
-            'friends': []
-        }
+        # Create new user - all users get launcher code now
+        from mongo.models.user import User
         
-        users = get_users()
-        users.append(new_user)
-        save_users(users)
+        new_user = User(
+            id=user_id,
+            username=username,
+            email=email,
+            password=hash_password(password),
+            join_date=datetime.now().strftime('%Y-%m-%d'),
+            status='Standard',
+            games_count=0,
+            is_admin=False,
+            launcher_connected=False,
+            last_connection=None,
+            unique_id=generate_unique_id(user_id),
+            total_play_time='0h 0m',
+            games_played=0,
+            achievements=0,
+            last_session=None,
+            game_sessions=[],
+            slots=0,
+            friends=[],
+            launcher_code=generate_launcher_code()  # All users get launcher code
+        )
+        
+        success = user_ops.create_user(new_user)
+        if not success:
+            return render_template('register.html', error='Failed to create user account')
         
         # Log the user in
-        session['user_id'] = new_user['id']
-        session['username'] = new_user['username']
-        session['is_admin'] = is_admin(new_user)
+        session['user_id'] = new_user.id
+        session['username'] = new_user.username
+        session['is_admin'] = new_user.is_admin
         
         return redirect(url_for('profile'))
     
@@ -844,35 +834,27 @@ def update_password():
 @login_required
 def regenerate_launcher_code():
     """Regenerate a user's launcher connection code"""
-    user = find_user_by_id(session['user_id'])
+    user_id = session['user_id']
+    user = find_user_by_id(user_id)
     if not user:
         return jsonify({'success': False, 'error': 'User not found'})
     
     # Generate a new code
     new_code = generate_launcher_code()
     
-    # Update user
-    users = get_users()
-    for u in users:
-        if u['id'] == user['id']:
-            u['launcher_code'] = new_code
-            u['launcher_connected'] = False
-            u['last_connection'] = None
-            
-            # Mark all active devices as disconnected with the force_disconnect flag
-            if 'active_devices' in u:
-                for device in u['active_devices']:
-                    device['disconnected'] = True
-                    device['force_disconnect'] = True
-                    device['code_changed'] = True  # New flag to track code changes
-            
-            # Clear devices array
-            if 'devices' in u:
-                u['devices'] = []
-                
-            break
+    # Update user in MongoDB
+    updates = {
+        'launcher_code': new_code,
+        'launcher_connected': False,
+        'last_connection': None,
+        'devices': [],  # Clear devices array
+        'active_devices': []  # Clear active devices
+    }
     
-    save_users(users)
+    success = user_ops.update_user(user_id, updates)
+    
+    if not success:
+        return jsonify({'success': False, 'error': 'Failed to update user in database'})
     
     return jsonify({'success': True, 'new_code': new_code})
 
@@ -2362,19 +2344,26 @@ def inject_is_admin():
 @app.route('/api/launcher/connect', methods=['POST'])
 def launcher_connect():
     """Connect a launcher to a user account via connection code"""
+    logger.info(f"[API] Launcher connect request from {request.remote_addr}")
     data = request.get_json()
+    logger.info(f"[API] Connect data: {data}")
     
     if not data or 'code' not in data:
+        logger.warning(f"[API] Invalid connect request from {request.remote_addr}")
         return jsonify({'success': False, 'error': 'Invalid request', 'should_disconnect': True})
     
     code = data['code']
     user = find_user_by_launcher_code(code)
     
     if not user:
+        logger.warning(f"[API] Invalid connection code: {code}")
         return jsonify({'success': False, 'error': 'Invalid connection code', 'should_disconnect': True})
+    
+    logger.info(f"[API] User found for connection: {user['username']} (status: {user.get('status')})")
     
     # Check if user has valid premium status
     if user.get('status') not in ['Premium', 'Admin', 'Premium (Aligned)']:
+        logger.warning(f"[API] User {user['username']} denied: no premium status (current: {user.get('status')})")
         return jsonify({
             'success': False, 
             'error': 'Premium subscription required',
@@ -2388,84 +2377,97 @@ def launcher_connect():
     device_os = data.get('device_os', 'Unknown OS')
     
     # Check if this is the primary device or if no primary device is set yet
-    users = get_users()
-    for u in users:
-        if u['id'] == user['id']:
-            # If no primary device is set, set this device as primary
-            if 'primary_device' not in u:
-                u['primary_device'] = {
-                    'device_id': device_id,
-                    'device_name': device_name,
-                    'device_os': device_os,
-                    'registered_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                }
-            else:
-                # Check if the connecting device is the primary device
-                if u['primary_device']['device_id'] != device_id:
-                    return jsonify({
-                        'success': False,
-                        'error': 'This account can only be accessed from the primary device',
-                        'should_disconnect': True,
-                        'reason': 'not_primary_device'
-                    })
-            
-            u['launcher_connected'] = True
-            u['last_connection'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            u['last_connected_device'] = device_id
-            
-            # Initialize device arrays if they don't exist
-            if 'active_devices' not in u:
-                u['active_devices'] = []
-            if 'devices' not in u:
-                u['devices'] = []
-            
-            # Update or add device to active_devices
-            device_exists = False
-            for device in u.get('active_devices', []):
-                if device['device_id'] == device_id:
-                    device_exists = True
-                    device['last_connection'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    device['device_name'] = device_name
-                    device['device_os'] = device_os
-                    device['disconnected'] = False
-                    if 'force_disconnect' in device:
-                        del device['force_disconnect']
-                    if 'disconnect_reason' in device:
-                        del device['disconnect_reason']
-                    break
-            
-            if not device_exists:
-                u['active_devices'].append({
-                    'device_id': device_id,
-                    'device_name': device_name,
-                    'device_os': device_os,
-                    'first_connection': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'last_connection': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'disconnected': False
-                })
-            
-            # Update or add device to devices list
-            device_exists = False
-            for device in u.get('devices', []):
-                if device['device_id'] == device_id:
-                    device_exists = True
-                    device['last_connection'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    device['device_name'] = device_name
-                    device['device_os'] = device_os
-                    break
-            
-            if not device_exists:
-                u['devices'].append({
-                    'device_id': device_id,
-                    'device_name': device_name,
-                    'device_os': device_os,
-                    'first_connection': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'last_connection': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                })
-            
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    user_id = user['id']
+    
+    # Get current user data from MongoDB
+    db_user = user_ops.get_user_by_id(user_id)
+    if not db_user:
+        return jsonify({'success': False, 'error': 'User not found in database', 'should_disconnect': True})
+    
+    # Prepare device information
+    device_info = {
+        'device_id': device_id,
+        'device_name': device_name,
+        'device_os': device_os,
+        'first_connection': current_time,
+        'last_connection': current_time,
+        'disconnected': False
+    }
+    
+    # Prepare updates to user
+    updates = {
+        'launcher_connected': True,
+        'last_connection': current_time,
+        'last_connected_device': device_id
+    }
+    
+    # Handle primary device logic
+    user_dict = db_user.to_dict()
+    if 'primary_device' not in user_dict:
+        updates['primary_device'] = {
+            'device_id': device_id,
+            'device_name': device_name,
+            'device_os': device_os,
+            'registered_at': current_time
+        }
+    else:
+        # Check if the connecting device is the primary device
+        if user_dict['primary_device']['device_id'] != device_id:
+            return jsonify({
+                'success': False,
+                'error': 'This account can only be accessed from the primary device',
+                'should_disconnect': True,
+                'reason': 'not_primary_device'
+            })
+    
+    # Handle active devices
+    active_devices = user_dict.get('active_devices', [])
+    device_exists = False
+    for device in active_devices:
+        if device['device_id'] == device_id:
+            device_exists = True
+            device.update({
+                'last_connection': current_time,
+                'device_name': device_name,
+                'device_os': device_os,
+                'disconnected': False
+            })
+            # Remove disconnect flags
+            device.pop('force_disconnect', None)
+            device.pop('disconnect_reason', None)
             break
     
-    save_users(users)
+    if not device_exists:
+        active_devices.append(device_info.copy())
+    
+    updates['active_devices'] = active_devices
+    
+    # Handle devices list
+    devices = user_dict.get('devices', [])
+    device_exists = False
+    for device in devices:
+        if device['device_id'] == device_id:
+            device_exists = True
+            device.update({
+                'last_connection': current_time,
+                'device_name': device_name,
+                'device_os': device_os
+            })
+            break
+    
+    if not device_exists:
+        device_copy = device_info.copy()
+        device_copy.pop('disconnected', None)  # devices list doesn't need disconnected flag
+        devices.append(device_copy)
+    
+    updates['devices'] = devices
+    
+    # Save updates to MongoDB
+    success = user_ops.update_user(user_id, updates)
+    if not success:
+        logger.error(f"Failed to update user {user_id} in database after launcher connection")
+        return jsonify({'success': False, 'error': 'Database update failed', 'should_disconnect': True})
     
     # Determine the status_expires value
     status_expires = "0"  # Default for unlimited premium
@@ -2642,9 +2644,12 @@ def api_slots_add():
 @app.route('/api/launcher/update-session', methods=['POST'])
 def launcher_update_session():
     """Update user's game session data from launcher"""
+    logger.info(f"[API] Session update request from {request.remote_addr}")
     data = request.get_json()
+    logger.info(f"[API] Session update data: {data}")
     
     if not data or 'user_id' not in data or 'game_id' not in data or 'playtime' not in data:
+        logger.warning(f"[API] Invalid session update request from {request.remote_addr}")
         return jsonify({'success': False, 'error': 'Invalid request'})
     
     user_id = data['user_id']
@@ -2652,14 +2657,17 @@ def launcher_update_session():
     playtime = int(data['playtime'])  # playtime in minutes
     device_id = data.get('device_id', None)  # Optional device ID
     
-    
-    if not find_user_by_id(user_id):
+    user = find_user_by_id(user_id)
+    if not user:
+        logger.warning(f"[API] Session update for non-existent user: {user_id}")
         return jsonify({'success': False, 'error': 'User not found'})
     
+    logger.info(f"[API] Updating session for {user['username']}: game={game_id}, playtime={playtime}min, device={device_id}")
     success = update_user_stats(user_id, game_id, playtime)
     
     # Update device's last connection time if device_id is provided
     if device_id:
+        logger.info(f"[API] Updating device {device_id} last connection time")
         users = get_users()
         for user in users:
             if user['id'] == user_id and 'devices' in user:
@@ -2668,6 +2676,7 @@ def launcher_update_session():
                         device['last_connection'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         save_users(users)
     
+    logger.info(f"[API] Session update complete: success={success}")
     return jsonify({'success': success})
 
 @app.route('/check-expired', methods=['GET'])
@@ -3025,19 +3034,26 @@ def api_devices_disconnect():
 @app.route('/api/launcher/check-status', methods=['POST'])
 def launcher_check_status():
     """Check if user still has premium access"""
+    logger.info(f"[API] Status check request from {request.remote_addr}")
     data = request.get_json()
+    logger.info(f"[API] Status check data: {data}")
     
     if not data or 'user_id' not in data:
+        logger.warning(f"[API] Invalid status check request from {request.remote_addr}")
         return jsonify({'success': False, 'error': 'Invalid request', 'should_disconnect': True})
     
     user_id = data['user_id']
     user = find_user_by_id(user_id)
     
     if not user:
+        logger.warning(f"[API] Status check for non-existent user: {user_id}")
         return jsonify({'success': False, 'error': 'User not found', 'should_disconnect': True})
+    
+    logger.info(f"[API] Checking status for {user['username']}: {user.get('status')}")
     
     # Check if user still has premium status
     if user.get('status') not in ['Premium', 'Admin', 'Premium (Aligned)']:
+        logger.warning(f"[API] User {user['username']} status check failed: no premium (status: {user.get('status')})")
         return jsonify({
             'success': False, 
             'error': 'Premium subscription required',
@@ -3047,6 +3063,7 @@ def launcher_check_status():
     
     # Check if user's launcher code is still valid
     if not user.get('launcher_code'):
+        logger.warning(f"[API] User {user['username']} status check failed: invalid launcher code")
         return jsonify({
             'success': False,
             'error': 'Invalid launcher code',
@@ -3059,6 +3076,7 @@ def launcher_check_status():
     if user.get('premium_expires_at'):
         status_expires = user['premium_expires_at']
     
+    logger.info(f"[API] Status check passed for {user['username']}")
     return jsonify({
         'success': True,
         'should_disconnect': False,
@@ -3203,9 +3221,12 @@ def api_devices_reset_primary():
 @app.route('/api/launcher/check-connection', methods=['POST'])
 def launcher_check_connection():
     """Check if device is still connected"""
+    logger.info(f"[API] Connection check request from {request.remote_addr}")
     data = request.get_json()
+    logger.info(f"[API] Connection check data: {data}")
     
     if not data or 'user_id' not in data or 'device_id' not in data:
+        logger.warning(f"[API] Invalid connection check request from {request.remote_addr}")
         return jsonify({
             'connected': False, 
             'error': 'Invalid request data',
@@ -3217,14 +3238,18 @@ def launcher_check_connection():
     user = find_user_by_id(user_id)
     
     if not user:
+        logger.warning(f"[API] Connection check for non-existent user: {user_id}")
         return jsonify({
             'connected': False, 
             'error': 'User not found',
             'force_disconnect': True
         })
     
+    logger.info(f"[API] Checking connection for {user['username']}, device {device_id}")
+    
     # Check if user still has premium status
     if user.get('status') not in ['Premium', 'Admin', 'Premium (Aligned)']:
+        logger.warning(f"[API] Connection check failed for {user['username']}: no premium status")
         return jsonify({
             'connected': False, 
             'error': 'Premium subscription required',
@@ -3240,13 +3265,18 @@ def launcher_check_connection():
             if device.get('device_id') == device_id:
                 device_connected = not device.get('disconnected', False)
                 force_disconnect = device.get('force_disconnect', False)
+                logger.info(f"[API] Device {device_id} found: connected={device_connected}, force_disconnect={force_disconnect}")
                 break
+    
+    if not device_connected and not force_disconnect:
+        logger.warning(f"[API] Device {device_id} not found in active devices for {user['username']}")
     
     # Determine the status_expires value
     status_expires = "0"  # Default for unlimited premium
     if user.get('premium_expires_at'):
         status_expires = user['premium_expires_at']
     
+    logger.info(f"[API] Connection check result for {user['username']}: connected={device_connected}")
     return jsonify({
         'connected': device_connected,
         'force_disconnect': force_disconnect,
